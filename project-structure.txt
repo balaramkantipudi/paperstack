@@ -1,0 +1,111 @@
+.
+├── index.html
+├── package-lock.json
+├── package.json
+├── plugins
+│   ├── babel-plugin-inject-data-locator.ts
+│   └── vite-plugin-inject-data-locator.ts
+├── postcss.config.js
+├── project-structure.txt
+├── README.md
+├── src
+│   ├── app
+│   │   └── api
+│   │       ├── analytics
+│   │       │   └── insights.ts
+│   │       ├── create-checkout-session.ts
+│   │       ├── dashboard
+│   │       │   └── metrics.ts
+│   │       ├── debug
+│   │       │   └── auth.ts
+│   │       ├── documents
+│   │       │   ├── [id]
+│   │       │   │   └── status.ts
+│   │       │   ├── [id].ts
+│   │       │   ├── batch-process.ts
+│   │       │   ├── bulk-actions.ts
+│   │       │   ├── process.ts
+│   │       │   └── upload.ts
+│   │       ├── integrations
+│   │       │   ├── index.ts
+│   │       │   ├── quickbooks
+│   │       │   │   ├── auth.ts
+│   │       │   │   ├── callback.ts
+│   │       │   │   └── sync.ts
+│   │       │   └── xero
+│   │       │       ├── auth.ts
+│   │       │       ├── callback.ts
+│   │       │       └── sync.ts
+│   │       ├── organizations
+│   │       │   └── [id]
+│   │       │       └── documents.ts
+│   │       ├── test.ts
+│   │       └── webhooks
+│   │           ├── document-processed.ts
+│   │           └── stripe.ts
+│   ├── App.tsx
+│   ├── components
+│   │   ├── accounting-integration-view.tsx
+│   │   ├── dashboard-page.tsx
+│   │   ├── document-dashboard-view.tsx
+│   │   ├── document-processing-view.tsx
+│   │   ├── document-review-page.tsx
+│   │   ├── document-search-page.tsx
+│   │   ├── document-search-view.tsx
+│   │   ├── document-upload-page.tsx
+│   │   ├── document-upload-view.tsx
+│   │   ├── features-section.tsx
+│   │   ├── final-cta.tsx
+│   │   ├── financial-dashboard-page.tsx
+│   │   ├── floating-cta.tsx
+│   │   ├── footer.tsx
+│   │   ├── header.tsx
+│   │   ├── hero-section.tsx
+│   │   ├── how-it-works.tsx
+│   │   ├── login-page.tsx
+│   │   ├── pricing-section.tsx
+│   │   ├── product-showcase.tsx
+│   │   ├── profile-page.tsx
+│   │   ├── project-allocation-view.tsx
+│   │   ├── schedule-demo-modal.tsx
+│   │   ├── settings-page.tsx
+│   │   ├── signup-page.tsx
+│   │   ├── social-proof-bar.tsx
+│   │   ├── testimonial-section.tsx
+│   │   ├── vendor-management-page.tsx
+│   │   └── vendor-management-view.tsx
+│   ├── index.css
+│   ├── lib
+│   │   ├── api-client.ts
+│   │   ├── auth.ts
+│   │   ├── azure-document-intelligence.ts
+│   │   ├── batch-processor.ts
+│   │   ├── cache-manager.ts
+│   │   ├── construction-categories.ts
+│   │   ├── document-processor.ts
+│   │   ├── openai-classification.ts
+│   │   ├── quickbooks-client.ts
+│   │   ├── stripe.ts
+│   │   ├── supabase.ts
+│   │   ├── useAuth.ts
+│   │   ├── vendor-recognition.ts
+│   │   └── xero-client.ts
+│   ├── main.tsx
+│   ├── mocks
+│   │   ├── azure-form-recognizer.js
+│   │   ├── formidable.js
+│   │   ├── framer-motion.tsx
+│   │   ├── heroui-react.tsx
+│   │   ├── iconify-react.tsx
+│   │   ├── intuit-oauth.js
+│   │   ├── react-intersection-observer.tsx
+│   │   └── supabase-js.js
+│   └── types
+│       ├── constants.ts
+│       └── declarations.d.ts
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+20 directories, 89 files
