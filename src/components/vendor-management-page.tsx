@@ -1,23 +1,20 @@
 import React from "react";
-import { 
-  Button, Card, CardBody, Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,
-  Tabs, Tab, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Badge,
-  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Pagination
-} from "@heroui/react";
+import { Button, Card, CardBody, Input, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip, Badge, Pagination, Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@heroui/react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
-export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void }> = ({ navigateTo }) => {
+export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: any) => void }> = ({ navigateTo }) => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeTab, setActiveTab] = React.useState("all");
   const [page, setPage] = React.useState(1);
-  
-  const rowsPerPage = 5;
-  
-  const vendors = [
-    { 
+
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const rowsPerPage = 10;
+
+  const [vendors, setVendors] = React.useState([
+    {
       id: 1,
-      name: "BuildSupply Inc.", 
+      name: "BuildSupply Inc.",
       category: "Materials Supplier",
       contact: "John Smith",
       email: "john@buildsupply.com",
@@ -25,9 +22,9 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
       invoices: 18,
       status: "Current"
     },
-    { 
+    {
       id: 2,
-      name: "Metro Concrete", 
+      name: "Metro Concrete",
       category: "Materials Supplier",
       contact: "Sarah Johnson",
       email: "sarah@metroconcrete.com",
@@ -35,9 +32,9 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
       invoices: 12,
       status: "Current"
     },
-    { 
+    {
       id: 3,
-      name: "City Electric Supply", 
+      name: "City Electric Supply",
       category: "Electrical Supplier",
       contact: "Mike Wilson",
       email: "mike@cityelectric.com",
@@ -45,9 +42,9 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
       invoices: 15,
       status: "Overdue"
     },
-    { 
+    {
       id: 4,
-      name: "ConstructEquip Rentals", 
+      name: "ConstructEquip Rentals",
       category: "Equipment Rental",
       contact: "Lisa Brown",
       email: "lisa@constructequip.com",
@@ -55,9 +52,9 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
       invoices: 8,
       status: "Current"
     },
-    { 
+    {
       id: 5,
-      name: "PlumbPro Services", 
+      name: "PlumbPro Services",
       category: "Plumbing Contractor",
       contact: "David Miller",
       email: "david@plumbpro.com",
@@ -65,8 +62,34 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
       invoices: 6,
       status: "Current"
     }
-  ];
-  
+  ]);
+
+  const [newVendor, setNewVendor] = React.useState({
+    name: "",
+    category: "",
+    contact: "",
+    email: ""
+  });
+
+  const handleAddVendor = () => {
+    if (!newVendor.name || !newVendor.category) return;
+
+    const vendor = {
+      id: vendors.length + 1,
+      ...newVendor,
+      spent: 0,
+      invoices: 0,
+      status: "Current"
+    };
+
+    setVendors([...vendors, vendor]);
+    setNewVendor({ name: "", category: "", contact: "", email: "" });
+    // Close modal logic is handled by the Modal component's onOpenChange, 
+    // but we need to trigger it. Since we don't have direct control over isOpen here 
+    // without passing it, we'll rely on the button press which also needs to close it.
+    // Actually, we can just pass a close function to the button.
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -75,39 +98,39 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
       maximumFractionDigits: 0
     }).format(amount);
   };
-  
+
   const filteredVendors = vendors.filter(vendor => {
     // Filter by search query
     if (searchQuery && !vendor.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
-    
+
     // Filter by tab
     if (activeTab === "overdue" && vendor.status !== "Overdue") {
       return false;
     }
-    
+
     return true;
   });
-  
+
   const paginatedVendors = filteredVendors.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-  
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-white border-b border-foreground-200 py-4">
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-          <div 
-            className="flex items-center cursor-pointer" 
+          <div
+            className="flex items-center cursor-pointer"
             onClick={() => navigateTo("dashboard")}
           >
-            <Icon 
-              icon="lucide:layers" 
-              className="text-primary h-7 w-7 mr-2" 
+            <Icon
+              icon="lucide:layers"
+              className="text-primary h-7 w-7 mr-2"
             />
             <span className="font-gilroy font-bold text-xl">Paperstack</span>
           </div>
-          
+
           <div className="flex items-center space-x-6">
             <Button
               variant="light"
@@ -119,7 +142,7 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
           </div>
         </div>
       </header>
-      
+
       {/* Main Content */}
       <main className="container mx-auto px-4 md:px-6 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -127,7 +150,7 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
             <h1 className="font-gilroy text-2xl md:text-3xl font-bold mb-1">Vendor Management</h1>
             <p className="text-foreground-500">Manage your construction suppliers and contractors</p>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <Input
               placeholder="Search vendors..."
@@ -136,20 +159,32 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
               startContent={<Icon icon="lucide:search" className="h-4 w-4 text-foreground-400" />}
               className="w-full md:w-64"
             />
-            
-            <Button 
+
+            <Button
               color="primary"
               startContent={<Icon icon="lucide:plus" className="h-4 w-4" />}
+              onPress={onOpen}
             >
               Add Vendor
             </Button>
+
+            <Button
+              variant="flat"
+              color="default"
+              startContent={<Icon icon="lucide:mail" className="h-4 w-4" />}
+              onPress={() => {
+                alert('Email functionality coming soon!');
+              }}
+            >
+              Email All Vendors
+            </Button>
           </div>
         </div>
-        
+
         <Card className="ambient-shadow mb-8">
           <CardBody className="p-6">
-            <Tabs 
-              selectedKey={activeTab} 
+            <Tabs
+              selectedKey={activeTab}
               onSelectionChange={(key) => {
                 setActiveTab(key as string);
                 setPage(1);
@@ -162,8 +197,8 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
                 tab: "max-w-fit px-0 h-12"
               }}
             >
-              <Tab 
-                key="all" 
+              <Tab
+                key="all"
                 title={
                   <div className="flex items-center gap-2">
                     <Icon icon="lucide:list" className="h-4 w-4" />
@@ -171,8 +206,8 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
                   </div>
                 }
               />
-              <Tab 
-                key="overdue" 
+              <Tab
+                key="overdue"
                 title={
                   <div className="flex items-center gap-2">
                     <Icon icon="lucide:alert-circle" className="h-4 w-4" />
@@ -181,9 +216,9 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
                 }
               />
             </Tabs>
-            
+
             <div className="pt-4">
-              <Table 
+              <Table
                 aria-label="Vendors table"
                 removeWrapper
                 bottomContent={
@@ -205,31 +240,31 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
                   <TableColumn>CATEGORY</TableColumn>
                   <TableColumn>CONTACT</TableColumn>
                   <TableColumn>SPENT</TableColumn>
+                  <TableColumn>INVOICES</TableColumn>
                   <TableColumn>STATUS</TableColumn>
                   <TableColumn>ACTIONS</TableColumn>
                 </TableHeader>
                 <TableBody emptyContent="No vendors found">
                   {paginatedVendors.map((vendor) => (
-                    <TableRow key={vendor.id}>
-                      <TableCell>
-                        <div className="font-medium">{vendor.name}</div>
-                        <div className="text-xs text-foreground-500">{vendor.invoices} invoices</div>
-                      </TableCell>
+                    <TableRow key={vendor.id} className="cursor-pointer hover:bg-foreground-50" onClick={() => navigateTo("documents", { vendor: vendor.name })}>
+                      <TableCell className="font-medium">{vendor.name}</TableCell>
                       <TableCell>{vendor.category}</TableCell>
                       <TableCell>
-                        <div>{vendor.contact}</div>
-                        <div className="text-xs text-foreground-500">{vendor.email}</div>
+                        <div>
+                          <p className="text-sm">{vendor.contact}</p>
+                          <p className="text-xs text-foreground-500">{vendor.email}</p>
+                        </div>
                       </TableCell>
+                      <TableCell>{formatCurrency(vendor.spent)}</TableCell>
+                      <TableCell>{vendor.invoices}</TableCell>
                       <TableCell>
-                        <div className="font-medium">{formatCurrency(vendor.spent)}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          color={vendor.status === "Current" ? "success" : "danger"} 
+                        <Chip
+                          color={vendor.status === "Current" ? "success" : "danger"}
                           variant="flat"
+                          size="sm"
                         >
                           {vendor.status}
-                        </Badge>
+                        </Chip>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -237,6 +272,10 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
                             isIconOnly
                             variant="light"
                             size="sm"
+                            onPress={(e) => {
+                              e.stopPropagation(); // Prevent row click
+                              // Edit logic
+                            }}
                           >
                             <Icon icon="lucide:edit" className="h-4 w-4" />
                           </Button>
@@ -265,81 +304,61 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string) => void
             </div>
           </CardBody>
         </Card>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card className="ambient-shadow">
-              <CardBody className="p-6">
-                <h2 className="font-gilroy text-lg font-bold mb-6">Common Construction Suppliers</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { category: "Concrete & Masonry", count: 5, icon: "lucide:package" },
-                    { category: "Lumber & Building Materials", count: 8, icon: "lucide:ruler" },
-                    { category: "Electrical", count: 3, icon: "lucide:zap" },
-                    { category: "Plumbing", count: 4, icon: "lucide:droplet" }
-                  ].map((category, index) => (
-                    <div key={index} className="border border-foreground-200 rounded-lg p-4 flex items-center">
-                      <div className="h-12 w-12 rounded-full bg-primary-50 flex items-center justify-center mr-4">
-                        <Icon icon={category.icon} className="h-6 w-6 text-primary-500" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{category.category}</p>
-                        <p className="text-sm text-foreground-500">{category.count} vendors</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-          
-          <div>
-            <Card className="ambient-shadow">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-gilroy text-lg font-bold">Quick Actions</h2>
-                </div>
-                
-                <div className="space-y-4">
-                  <Button 
-                    variant="flat" 
-                    color="primary"
-                    startContent={<Icon icon="lucide:plus" className="h-4 w-4" />}
-                    className="w-full justify-start"
-                  >
-                    Add New Vendor
-                  </Button>
-                  <Button 
-                    variant="flat" 
-                    color="default"
-                    startContent={<Icon icon="lucide:upload" className="h-4 w-4" />}
-                    className="w-full justify-start"
-                  >
-                    Import Vendors
-                  </Button>
-                  <Button 
-                    variant="flat" 
-                    color="default"
-                    startContent={<Icon icon="lucide:file-text" className="h-4 w-4" />}
-                    className="w-full justify-start"
-                  >
-                    Vendor Spending Report
-                  </Button>
-                  <Button 
-                    variant="flat" 
-                    color="default"
-                    startContent={<Icon icon="lucide:mail" className="h-4 w-4" />}
-                    className="w-full justify-start"
-                  >
-                    Email All Vendors
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        </div>
+
+
       </main>
+
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Add New Vendor</ModalHeader>
+              <ModalBody>
+                <Input
+                  autoFocus
+                  label="Vendor Name"
+                  placeholder="Enter vendor name"
+                  variant="bordered"
+                  value={newVendor.name}
+                  onValueChange={(val) => setNewVendor({ ...newVendor, name: val })}
+                />
+                <Input
+                  label="Category"
+                  placeholder="e.g. Materials, Labor"
+                  variant="bordered"
+                  value={newVendor.category}
+                  onValueChange={(val) => setNewVendor({ ...newVendor, category: val })}
+                />
+                <Input
+                  label="Contact Person"
+                  placeholder="Enter contact name"
+                  variant="bordered"
+                  value={newVendor.contact}
+                  onValueChange={(val) => setNewVendor({ ...newVendor, contact: val })}
+                />
+                <Input
+                  label="Email"
+                  placeholder="Enter email address"
+                  variant="bordered"
+                  value={newVendor.email}
+                  onValueChange={(val) => setNewVendor({ ...newVendor, email: val })}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Cancel
+                </Button>
+                <Button color="primary" onPress={() => {
+                  handleAddVendor();
+                  onClose();
+                }}>
+                  Add Vendor
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

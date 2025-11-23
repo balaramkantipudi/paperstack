@@ -339,33 +339,7 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
         </div>
 
         {/* Document Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {documentStatus.map((status, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-            >
-              <Card className="ambient-shadow">
-                <CardBody className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-foreground-500 mb-1">{status.title}</p>
-                      <h3 className="font-gilroy text-2xl font-bold">{status.count}</h3>
-                      <p className={`text-xs mt-1 ${status.color === "warning" ? 'text-warning-500' : status.color === "success" ? 'text-success-500' : 'text-primary-500'}`}>
-                        {status.color === "warning" ? 'Needs attention' : status.color === "success" ? 'Up to date' : 'Ready for review'}
-                      </p>
-                    </div>
-                    <div className={`h-10 w-10 rounded-full bg-${status.color}-50 flex items-center justify-center`}>
-                      <Icon icon={status.icon} className={`h-5 w-5 text-${status.color}-500`} />
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -381,6 +355,7 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
                     color="primary"
                     size="sm"
                     endContent={<Icon icon="lucide:arrow-right" className="h-4 w-4" />}
+                    onPress={() => navigateTo("documents")}
                   >
                     View Details
                   </Button>
@@ -400,32 +375,34 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
                           const startAngle = (previousPercentages / 100) * 360;
                           const endAngle = ((previousPercentages + category.percentage) / 100) * 360;
 
-                          // Convert angles to radians and calculate coordinates
-                          const startRad = (startAngle - 90) * (Math.PI / 180);
-                          const endRad = (endAngle - 90) * (Math.PI / 180);
+                          // Convert polar to cartesian coordinates
+                          const x1 = 50 + 40 * Math.cos((startAngle - 90) * (Math.PI / 180));
+                          const y1 = 50 + 40 * Math.sin((startAngle - 90) * (Math.PI / 180));
+                          const x2 = 50 + 40 * Math.cos((endAngle - 90) * (Math.PI / 180));
+                          const y2 = 50 + 40 * Math.sin((endAngle - 90) * (Math.PI / 180));
 
-                          const x1 = 50 + 40 * Math.cos(startRad);
-                          const y1 = 50 + 40 * Math.sin(startRad);
-                          const x2 = 50 + 40 * Math.cos(endRad);
-                          const y2 = 50 + 40 * Math.sin(endRad);
-
-                          // Determine if the arc should be drawn as a large arc
+                          // Determine if the arc should be greater than 180 degrees
                           const largeArcFlag = category.percentage > 50 ? 1 : 0;
 
-                          // Create the SVG path
-                          const d = `
-                            M 50 50
-                            L ${x1} ${y1}
-                            A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2}
-                            Z
-                          `;
+                          // Map category colors to actual hex/Tailwind colors
+                          const getColor = (color: string) => {
+                            const colors: Record<string, string> = {
+                              primary: "#006FEE", // NextUI primary
+                              success: "#17C964", // NextUI success
+                              secondary: "#7828C8", // NextUI secondary
+                              warning: "#F5A524", // NextUI warning
+                              danger: "#F31260", // NextUI danger
+                              default: "#71717A"  // NextUI default
+                            };
+                            return colors[color] || colors.default;
+                          };
 
                           return (
                             <path
                               key={i}
-                              d={d}
-                              className={`fill-${category.color}-500`}
-                              stroke="#fff"
+                              d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
+                              fill={getColor(category.color)}
+                              stroke="white"
                               strokeWidth="1"
                             />
                           );
@@ -479,6 +456,7 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
                     color="primary"
                     size="sm"
                     endContent={<Icon icon="lucide:arrow-right" className="h-4 w-4" />}
+                    onPress={() => navigateTo("projects")}
                   >
                     View All Projects
                   </Button>
@@ -529,9 +507,10 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
 
                       <div className="flex justify-end">
                         <Button
-                          variant="light"
+                          variant="flat"
                           size="sm"
-                          startContent={<Icon icon="lucide:pie-chart" className="h-4 w-4" />}
+                          color="primary"
+                          onPress={() => navigateTo("projects")}
                         >
                           View Breakdown
                         </Button>
@@ -673,6 +652,7 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
                     color="primary"
                     size="sm"
                     endContent={<Icon icon="lucide:arrow-right" className="h-4 w-4" />}
+                    onPress={() => navigateTo("documents")}
                   >
                     View All
                   </Button>

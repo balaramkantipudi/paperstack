@@ -8,7 +8,10 @@ import {
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
+import { useClerk } from "@clerk/clerk-react";
+
 export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({ navigateTo }) => {
+  const clerk = useClerk();
   const [activeTab, setActiveTab] = React.useState("profile");
 
   // General Settings state
@@ -173,11 +176,8 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
         <nav>
           <ul className="space-y-1">
             {[
-              { id: "general", label: "General Settings", icon: "lucide:settings" },
+              { id: "profile", label: "Account Settings", icon: "lucide:user" },
               { id: "integrations", label: "Integrations", icon: "lucide:plug" },
-              { id: "templates", label: "Document Templates", icon: "lucide:file-text" },
-              { id: "categories", label: "Categories & Tax Rules", icon: "lucide:tag" },
-              { id: "notifications", label: "Notifications", icon: "lucide:bell" },
               { id: "billing", label: "Billing & Subscription", icon: "lucide:credit-card" }
             ].map((item) => (
               <li key={item.id}>
@@ -207,143 +207,11 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
         onChange={(e) => setActiveTab(e.target.value)}
         className="w-full"
       >
-        <SelectItem key="general" value="general">General Settings</SelectItem>
-        <SelectItem key="team" value="team">Team Management</SelectItem>
+        <SelectItem key="profile" value="profile">Account Settings</SelectItem>
         <SelectItem key="integrations" value="integrations">Integrations</SelectItem>
-        <SelectItem key="templates" value="templates">Document Templates</SelectItem>
-        <SelectItem key="categories" value="categories">Categories & Tax Rules</SelectItem>
-        <SelectItem key="notifications" value="notifications">Notifications</SelectItem>
         <SelectItem key="billing" value="billing">Billing & Subscription</SelectItem>
       </Select>
     </div>
-  );
-
-  const renderGeneralSettings = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="ambient-shadow mb-8">
-        <CardBody className="p-6">
-          <h2 className="font-gilroy text-xl font-bold mb-6">General Settings</h2>
-
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-dmsans font-semibold mb-4">Preferences</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Language
-                  </label>
-                  <Select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full"
-                  >
-                    <SelectItem key="en-US" value="en-US">English (US)</SelectItem>
-                    <SelectItem key="en-GB" value="en-GB">English (UK)</SelectItem>
-                    <SelectItem key="es" value="es">Spanish</SelectItem>
-                    <SelectItem key="fr" value="fr">French</SelectItem>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Date Format
-                  </label>
-                  <Select
-                    value={dateFormat}
-                    onChange={(e) => setDateFormat(e.target.value)}
-                    className="w-full"
-                  >
-                    <SelectItem key="MM/DD/YYYY" value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                    <SelectItem key="DD/MM/YYYY" value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                    <SelectItem key="YYYY-MM-DD" value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Currency
-                  </label>
-                  <Select
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full"
-                  >
-                    <SelectItem key="USD" value="USD">USD ($)</SelectItem>
-                    <SelectItem key="EUR" value="EUR">EUR (€)</SelectItem>
-                    <SelectItem key="GBP" value="GBP">GBP (£)</SelectItem>
-                    <SelectItem key="CAD" value="CAD">CAD ($)</SelectItem>
-                    <SelectItem key="AUD" value="AUD">AUD ($)</SelectItem>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            <Divider />
-
-            <div>
-              <h3 className="font-dmsans font-semibold mb-4">Default Project Settings</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Default Project View
-                  </label>
-                  <Select
-                    value={defaultProject}
-                    onChange={(e) => setDefaultProject(e.target.value)}
-                    className="w-full"
-                  >
-                    <SelectItem key="all" value="all">All Projects</SelectItem>
-                    <SelectItem key="recent" value="recent">Recent Projects</SelectItem>
-                    <SelectItem key="active" value="active">Active Projects Only</SelectItem>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Default Document Sorting
-                  </label>
-                  <Select
-                    defaultSelectedKeys={["date_desc"]}
-                    className="w-full"
-                  >
-                    <SelectItem key="date_desc" value="date_desc">Date (Newest First)</SelectItem>
-                    <SelectItem key="date_asc" value="date_asc">Date (Oldest First)</SelectItem>
-                    <SelectItem key="name_asc" value="name_asc">Name (A-Z)</SelectItem>
-                    <SelectItem key="name_desc" value="name_desc">Name (Z-A)</SelectItem>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Auto-categorize documents</p>
-                    <p className="text-sm text-foreground-500">
-                      Automatically categorize documents based on AI detection
-                    </p>
-                  </div>
-                  <Switch defaultSelected color="primary" />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Auto-assign to projects</p>
-                    <p className="text-sm text-foreground-500">
-                      Automatically assign documents to projects based on content
-                    </p>
-                  </div>
-                  <Switch defaultSelected color="primary" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-    </motion.div>
   );
 
   const renderProfile = () => (
@@ -352,65 +220,218 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card
+          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
+          isPressable
+          onPress={() => clerk.openUserProfile()}
+        >
+          <CardBody className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
+                <Icon icon="lucide:user-cog" className="h-5 w-5 text-primary-500" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium mb-1">Manage Account</h4>
+                <p className="text-sm text-foreground-500">Update profile and settings</p>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+
+        <Card
+          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
+          isPressable
+          onPress={() => clerk.openUserProfile()}
+        >
+          <CardBody className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
+                <Icon icon="lucide:shield-check" className="h-5 w-5 text-primary-500" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium mb-1">Security</h4>
+                <p className="text-sm text-foreground-500">Enable 2FA and manage security settings</p>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card
+          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
+          isPressable
+          onPress={() => clerk.openUserProfile()}
+        >
+          <CardBody className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-lg bg-secondary-50 flex items-center justify-center">
+                <Icon icon="lucide:bell" className="h-5 w-5 text-secondary-500" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium mb-1">Notifications</h4>
+                <p className="text-sm text-foreground-500">Configure email and push notifications</p>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card
+          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
+          isPressable
+          onPress={() => clerk.openUserProfile()}
+        >
+          <CardBody className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-lg bg-success-50 flex items-center justify-center">
+                <Icon icon="lucide:key" className="h-5 w-5 text-success-500" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium mb-1">Password</h4>
+                <p className="text-sm text-foreground-500">Update your password securely</p>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card
+          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
+          isPressable
+          onPress={() => clerk.openUserProfile()}
+        >
+          <CardBody className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-lg bg-warning-50 flex items-center justify-center">
+                <Icon icon="lucide:monitor-smartphone" className="h-5 w-5 text-warning-500" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium mb-1">Sessions</h4>
+                <p className="text-sm text-foreground-500">View and manage active sessions</p>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    </motion.div >
+
+  );
+
+  const renderDocumentTemplates = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <Card className="ambient-shadow mb-8">
         <CardBody className="p-6">
-          <h2 className="font-gilroy text-xl font-bold mb-6">Personal Information</h2>
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="relative">
-                <div className="h-24 w-24 rounded-full bg-primary-100 flex items-center justify-center text-primary text-3xl font-bold">
-                  {profileName.split(" ").map(n => n[0]).join("")}
-                </div>
+          <h2 className="font-gilroy text-xl font-bold mb-6">Document Templates</h2>
+
+          <div className="space-y-6">
+            <div>
+              <h3 className="font-dmsans font-semibold mb-4">Saved Templates</h3>
+              <div className="space-y-3">
+                {templates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="border border-foreground-200 rounded-lg p-4 flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 rounded-md bg-primary-50 flex items-center justify-center mr-4">
+                        <Icon
+                          icon={
+                            template.type === "Invoice" ? "lucide:file-text" :
+                              template.type === "Receipt" ? "lucide:receipt" :
+                                template.type === "Contract" ? "lucide:file-signature" :
+                                  template.type === "Permit" ? "lucide:scale" :
+                                    "lucide:file-plus"
+                          }
+                          className="h-5 w-5 text-primary-500"
+                        />
+                      </div>
+                      <div>
+                        <p className="font-medium">{template.name}</p>
+                        <div className="flex items-center text-xs text-foreground-500">
+                          <span>{template.type}</span>
+                          <span className="mx-2">•</span>
+                          <span>Last used {template.lastUsed}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="flat"
+                        color="primary"
+                        size="sm"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        size="sm"
+                        color="danger"
+                      >
+                        <Icon icon="lucide:trash-2" className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4">
                 <Button
-                  isIconOnly
-                  size="sm"
                   color="primary"
-                  className="absolute bottom-0 right-0 rounded-full"
+                  variant="flat"
+                  startContent={<Icon icon="lucide:plus" className="h-4 w-4" />}
                 >
-                  <Icon icon="lucide:camera" className="h-4 w-4" />
+                  Create New Template
                 </Button>
               </div>
-              <p className="text-sm text-foreground-500">Allowed: JPG, PNG. Max 1MB</p>
             </div>
 
-            <div className="flex-1 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Full Name
-                  </label>
-                  <Input
-                    value={profileName}
-                    onValueChange={setProfileName}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Email Address
-                  </label>
-                  <Input
-                    value={profileEmail}
-                    onValueChange={setProfileEmail}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Phone Number
-                  </label>
-                  <Input
-                    value={profilePhone}
-                    onValueChange={setProfilePhone}
-                    className="w-full"
-                  />
-                </div>
-              </div>
+            <Divider />
 
-              <div className="flex justify-end">
-                <Button color="primary">
-                  Save Changes
-                </Button>
+            <div>
+              <h3 className="font-dmsans font-semibold mb-4">Automatic Categorization Rules</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Use AI for automatic categorization</p>
+                    <p className="text-sm text-foreground-500">
+                      Use machine learning to categorize documents automatically
+                    </p>
+                  </div>
+                  <Switch defaultSelected color="primary" />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Confidence threshold</p>
+                    <p className="text-sm text-foreground-500">
+                      Minimum confidence level for automatic categorization
+                    </p>
+                  </div>
+                  <Select
+                    defaultSelectedKeys={["80"]}
+                    className="max-w-[150px]"
+                  >
+                    <SelectItem key="70" value="70">70%</SelectItem>
+                    <SelectItem key="80" value="80">80%</SelectItem>
+                    <SelectItem key="90" value="90">90%</SelectItem>
+                    <SelectItem key="95" value="95">95%</SelectItem>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Require manual review for low confidence</p>
+                    <p className="text-sm text-foreground-500">
+                      Flag documents with low confidence for manual review
+                    </p>
+                  </div>
+                  <Switch defaultSelected color="primary" />
+                </div>
               </div>
             </div>
           </div>
@@ -612,223 +633,6 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
                     <SelectItem key="daily" value="daily">Daily</SelectItem>
                     <SelectItem key="weekly" value="weekly">Weekly</SelectItem>
                   </Select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-    </motion.div>
-  );
-
-  const renderDocumentTemplates = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="ambient-shadow mb-8">
-        <CardBody className="p-6">
-          <h2 className="font-gilroy text-xl font-bold mb-6">Document Templates</h2>
-
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-dmsans font-semibold mb-4">Saved Templates</h3>
-              <div className="space-y-3">
-                {templates.map((template) => (
-                  <div
-                    key={template.id}
-                    className="border border-foreground-200 rounded-lg p-4 flex items-center justify-between"
-                  >
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-md bg-primary-50 flex items-center justify-center mr-4">
-                        <Icon
-                          icon={
-                            template.type === "Invoice" ? "lucide:file-text" :
-                              template.type === "Receipt" ? "lucide:receipt" :
-                                template.type === "Contract" ? "lucide:file-signature" :
-                                  template.type === "Permit" ? "lucide:scale" :
-                                    "lucide:file-plus"
-                          }
-                          className="h-5 w-5 text-primary-500"
-                        />
-                      </div>
-                      <div>
-                        <p className="font-medium">{template.name}</p>
-                        <div className="flex items-center text-xs text-foreground-500">
-                          <span>{template.type}</span>
-                          <span className="mx-2">•</span>
-                          <span>Last used {template.lastUsed}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="flat"
-                        color="primary"
-                        size="sm"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        isIconOnly
-                        variant="light"
-                        size="sm"
-                        color="danger"
-                      >
-                        <Icon icon="lucide:trash-2" className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4">
-                <Button
-                  color="primary"
-                  variant="flat"
-                  startContent={<Icon icon="lucide:plus" className="h-4 w-4" />}
-                >
-                  Create New Template
-                </Button>
-              </div>
-            </div>
-
-            <Divider />
-
-            <div>
-              <h3 className="font-dmsans font-semibold mb-4">Template Creation</h3>
-              <div className="border border-foreground-200 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground-700 mb-2">
-                      Template Name
-                    </label>
-                    <Input
-                      placeholder="Enter template name"
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground-700 mb-2">
-                      Document Type
-                    </label>
-                    <Select
-                      defaultSelectedKeys={["invoice"]}
-                      className="w-full"
-                    >
-                      <SelectItem key="invoice" value="invoice">Invoice</SelectItem>
-                      <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
-                      <SelectItem key="contract" value="contract">Contract</SelectItem>
-                      <SelectItem key="permit" value="permit">Permit</SelectItem>
-                      <SelectItem key="change_order" value="change_order">Change Order</SelectItem>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-foreground-700 mb-2">
-                    Vendor / Source
-                  </label>
-                  <Input
-                    placeholder="Enter vendor name"
-                    className="w-full"
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-foreground-700 mb-2">Field Mapping</h4>
-                  <div className="space-y-3">
-                    {["Invoice Number", "Date", "Amount", "Tax", "Description"].map((field, index) => (
-                      <div key={index} className="flex items-center gap-4">
-                        <div className="w-1/3">
-                          <Input
-                            value={field}
-                            className="w-full"
-                          />
-                        </div>
-                        <Icon icon="lucide:arrow-right" className="h-4 w-4 text-foreground-400" />
-                        <div className="flex-1">
-                          <Select
-                            defaultSelectedKeys={[field.toLowerCase().replace(" ", "_")]}
-                            className="w-full"
-                          >
-                            <SelectItem key="invoice_number" value="invoice_number">Invoice Number</SelectItem>
-                            <SelectItem key="date" value="date">Date</SelectItem>
-                            <SelectItem key="amount" value="amount">Amount</SelectItem>
-                            <SelectItem key="tax" value="tax">Tax</SelectItem>
-                            <SelectItem key="description" value="description">Description</SelectItem>
-                            <SelectItem key="vendor" value="vendor">Vendor</SelectItem>
-                            <SelectItem key="project" value="project">Project</SelectItem>
-                          </Select>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Button
-                    variant="flat"
-                    color="primary"
-                    size="sm"
-                    startContent={<Icon icon="lucide:plus" className="h-4 w-4" />}
-                    className="mt-3"
-                  >
-                    Add Field
-                  </Button>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    color="primary"
-                  >
-                    Save Template
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <Divider />
-
-            <div>
-              <h3 className="font-dmsans font-semibold mb-4">Automatic Categorization Rules</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Use AI for automatic categorization</p>
-                    <p className="text-sm text-foreground-500">
-                      Use machine learning to categorize documents automatically
-                    </p>
-                  </div>
-                  <Switch defaultSelected color="primary" />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Confidence threshold</p>
-                    <p className="text-sm text-foreground-500">
-                      Minimum confidence level for automatic categorization
-                    </p>
-                  </div>
-                  <Select
-                    defaultSelectedKeys={["80"]}
-                    className="max-w-[150px]"
-                  >
-                    <SelectItem key="70" value="70">70%</SelectItem>
-                    <SelectItem key="80" value="80">80%</SelectItem>
-                    <SelectItem key="90" value="90">90%</SelectItem>
-                    <SelectItem key="95" value="95">95%</SelectItem>
-                  </Select>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Require manual review for low confidence</p>
-                    <p className="text-sm text-foreground-500">
-                      Flag documents with low confidence for manual review
-                    </p>
-                  </div>
-                  <Switch defaultSelected color="primary" />
                 </div>
               </div>
             </div>
@@ -1208,10 +1012,8 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
           {renderMobileNav()}
 
           {activeTab === "profile" && renderProfile()}
-          {activeTab === "notifications" && renderNotifications()}
-          {activeTab === "security" && renderSecurity()}
-          {activeTab === "billing" && renderBillingAndSubscription()}
           {activeTab === "integrations" && renderIntegrations()}
+          {activeTab === "billing" && renderBillingAndSubscription()}
         </div>
       </main>
     </div>

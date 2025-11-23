@@ -14,10 +14,11 @@ import { LoginPage } from "./components/login-page";
 import { DashboardPage } from "./components/dashboard-page";
 import { DocumentProcessingView } from "./components/document-processing-view";
 import { SignupPage } from "./components/signup-page";
-import { ProfilePage } from "./components/profile-page";
 import { SettingsPage } from "./components/settings-page";
 import { DocumentUploadPage } from "./components/document-upload-page";
 import { AccountingIntegrationView } from "./components/accounting-integration-view";
+import { DocumentsPage } from "./components/documents-page";
+import { ProjectsPage } from "./components/projects-page";
 
 // ... existing imports ...
 
@@ -34,12 +35,25 @@ import { ContactPage } from "./components/contact-page";
 function App() {
   // Change from hardcoded to state-based view management
   const [view, setView] = React.useState("landing");
+  const [documentCategory, setDocumentCategory] = React.useState<string | undefined>(undefined);
+  const [documentVendor, setDocumentVendor] = React.useState<string | undefined>(undefined);
 
-  // Function to handle navigation between views
-  const navigateTo = (targetView: string) => {
-    setView(targetView);
-    // Update URL without page reload
-    window.history.pushState({}, "", `/${targetView === "landing" ? "" : targetView}`);
+  // Navigation function that updates both state and URL
+  const navigateTo = (newView: string, data?: string | { category?: string; vendor?: string }) => {
+    setView(newView);
+
+    if (typeof data === 'string') {
+      setDocumentCategory(data);
+      setDocumentVendor(undefined);
+    } else if (typeof data === 'object') {
+      setDocumentCategory(data.category);
+      setDocumentVendor(data.vendor);
+    } else {
+      setDocumentCategory(undefined);
+      setDocumentVendor(undefined);
+    }
+
+    window.history.pushState({}, "", `/${newView === "landing" ? "" : newView}`);
   };
 
   // Check URL on initial load
@@ -109,12 +123,13 @@ function App() {
       {view === "login" && <LoginPage navigateTo={navigateTo} />}
       {view === "signup" && <SignupPage navigateTo={navigateTo} />}
       {view === "dashboard" && <DashboardPage navigateTo={navigateTo} />}
+      {view === "documents" && <DocumentsPage navigateTo={navigateTo} initialCategory={documentCategory} initialVendor={documentVendor} />}
+      {view === "projects" && <ProjectsPage navigateTo={navigateTo} />}
       {view === "document-processing" && <DocumentProcessingView navigateTo={navigateTo} />}
       {view === "document-upload" && <DocumentUploadPage navigateTo={navigateTo} />}
       {view === "document-review" && <DocumentReviewPage navigateTo={navigateTo} />}
       {view === "financial-dashboard" && <FinancialDashboardPage navigateTo={navigateTo} />}
       {view === "vendor-management" && <VendorManagementPage navigateTo={navigateTo} />}
-      {view === "profile" && <ProfilePage navigateTo={navigateTo} />}
       {view === "settings" && <SettingsPage navigateTo={navigateTo} />}
       {view === "accounting" && <AccountingIntegrationView navigateTo={navigateTo} />}
       {view === "privacy" && <PrivacyPage navigateTo={navigateTo} />}

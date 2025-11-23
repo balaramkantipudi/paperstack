@@ -5,14 +5,11 @@ import { Icon } from "@iconify/react";
 
 import { documentService, Document, DocumentStats } from "../services/document-service";
 
-export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = ({ navigateTo }) => {
+export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) => void }> = ({ navigateTo }) => {
   const [selectedProject, setSelectedProject] = React.useState("All Projects");
-  const [searchExpanded, setSearchExpanded] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
   const [stats, setStats] = React.useState<DocumentStats | null>(null);
   const [recentDocuments, setRecentDocuments] = React.useState<Document[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     const loadDashboardData = async () => {
@@ -45,28 +42,28 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
   const metrics = [
     {
       title: "Documents Processed",
-      value: stats?.totalProcessed.toString() || "...",
+      value: stats?.totalProcessed.toString() || "0",
       change: "+12%",
       icon: "lucide:file-check",
       color: "primary"
     },
     {
       title: "Time Saved",
-      value: "86h",
+      value: stats ? `${Math.floor(stats.totalProcessed * 0.5)}h` : "0h",
       change: "+8%",
       icon: "lucide:clock",
       color: "secondary"
     },
     {
       title: "Awaiting Review",
-      value: stats?.needsReview.toString() || "...",
+      value: stats?.needsReview.toString() || "0",
       change: "-3",
       icon: "lucide:file-search",
       color: "default"
     },
     {
       title: "Tax Deductions",
-      value: stats ? `$${(stats.totalValue / 1000).toFixed(1)}k` : "...",
+      value: stats ? `$${(stats.totalValue / 1000).toFixed(1)}k` : "$0",
       change: "+$2.1k",
       icon: "lucide:receipt",
       color: "success"
@@ -74,20 +71,21 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
   ];
 
   const documentCategories = [
-    { name: "Invoices", count: 124, color: "primary" },
-    { name: "Receipts", count: 87, color: "secondary" },
-    { name: "Contracts", count: 32, color: "success" },
-    { name: "Permits", count: 18, color: "warning" },
-    { name: "Change Orders", count: 42, color: "danger" }
+    { name: "Invoices", count: 145, color: "primary" },
+    { name: "Receipts", count: 89, color: "secondary" },
+    { name: "Contracts", count: 12, color: "success" },
+    { name: "Permits", count: 8, color: "warning" },
+    { name: "Change Orders", count: 24, color: "danger" },
   ];
 
-  // Handle search expansion
-  const expandSearch = () => {
-    setSearchExpanded(true);
-    setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 100);
-  };
+  const topVendors = [
+    { name: "BuildSupply Inc.", amount: "$12,450", count: 5 },
+    { name: "ABC Contractors", amount: "$8,200", count: 3 },
+    { name: "City Hall", amount: "$1,200", count: 2 },
+    { name: "Hardware Store", amount: "$850", count: 8 },
+  ];
+
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,49 +104,50 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
           </div>
 
           <div className="flex items-center space-x-6">
-            {searchExpanded && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "240px", opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                className="relative"
-              >
-                <Input
-                  ref={searchInputRef}
-                  placeholder="Search documents..."
-                  value={searchQuery}
-                  onValueChange={setSearchQuery}
-                  startContent={<Icon icon="lucide:search" className="h-4 w-4 text-foreground-400" />}
-                  endContent={
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={() => setSearchExpanded(false)}
-                    >
-                      <Icon icon="lucide:x" className="h-4 w-4" />
-                    </Button>
-                  }
-                  onBlur={() => {
-                    if (!searchQuery) {
-                      setSearchExpanded(false);
-                    }
-                  }}
-                  className="w-full"
-                />
-              </motion.div>
-            )}
 
-            <div className="relative">
-              <Button
-                isIconOnly
-                variant="light"
-                aria-label="Notifications"
-              >
-                <Icon icon="lucide:bell" className="h-5 w-5" />
-              </Button>
-              <Badge content="3" color="primary" size="sm" className="absolute -top-1 -right-1" />
-            </div>
+
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  isIconOnly
+                  variant="light"
+                  aria-label="Notifications"
+                  className="relative"
+                >
+                  <Icon icon="lucide:bell" className="h-5 w-5" />
+                  <Badge content="3" color="primary" size="sm" className="absolute -top-1 -right-1" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Notifications" className="w-80">
+                <DropdownItem key="header" className="h-14 gap-2" textValue="Notifications">
+                  <p className="font-semibold">Notifications</p>
+                </DropdownItem>
+                <DropdownItem key="notif1" textValue="Document processed">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium">Document processed successfully</p>
+                    <p className="text-xs text-foreground-500">Invoice #1234 from BuildSupply Inc.</p>
+                    <p className="text-xs text-foreground-400">2 minutes ago</p>
+                  </div>
+                </DropdownItem>
+                <DropdownItem key="notif2" textValue="Review needed">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium">Review needed</p>
+                    <p className="text-xs text-foreground-500">Low confidence on receipt categorization</p>
+                    <p className="text-xs text-foreground-400">1 hour ago</p>
+                  </div>
+                </DropdownItem>
+                <DropdownItem key="notif3" textValue="QuickBooks synced">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium">QuickBooks synced</p>
+                    <p className="text-xs text-foreground-500">15 documents synced successfully</p>
+                    <p className="text-xs text-foreground-400">3 hours ago</p>
+                  </div>
+                </DropdownItem>
+                <DropdownItem key="view-all" className="text-primary" textValue="View all" onPress={() => navigateTo("documents")}>
+                  <p className="text-center text-sm">View all notifications</p>
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
 
             <Dropdown>
               <DropdownTrigger>
@@ -162,12 +161,6 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
                 </Button>
               </DropdownTrigger>
               <DropdownMenu aria-label="User actions">
-                <DropdownItem
-                  key="profile"
-                  onPress={() => navigateTo("profile")}
-                >
-                  Profile
-                </DropdownItem>
                 <DropdownItem
                   key="settings"
                   onPress={() => navigateTo("settings")}
@@ -198,44 +191,11 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
           </div>
 
           <div className="flex items-center gap-4">
-            {!searchExpanded && (
-              <Input
-                placeholder="Search documents..."
-                startContent={<Icon icon="lucide:search" className="h-4 w-4 text-foreground-400" />}
-                className="w-full md:w-64"
-              />
-            )}
-
-            <Button
-              color="primary"
-              startContent={<Icon icon="lucide:upload" className="h-4 w-4" />}
-              onPress={() => navigateTo("document-upload")}
-            >
-              Upload
-            </Button>
           </div>
         </div>
 
         {/* Project Filter */}
-        <div className="mb-8">
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                variant="bordered"
-                endContent={<Icon icon="lucide:chevron-down" className="h-4 w-4" />}
-              >
-                {selectedProject}
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Project selection"
-              onAction={(key) => setSelectedProject(projects[Number(key)])}
-            >
-              {projects.map((project, index) => (
-                <DropdownItem key={index}>{project}</DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
+        <div className="flex justify-end mb-8">
         </div>
 
         {/* Metrics Grid */}
@@ -267,6 +227,60 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
           ))}
         </div>
 
+        {/* Quick Actions Bar */}
+        <div className="mb-8">
+          <Card className="ambient-shadow">
+            <CardBody className="p-4">
+              <div className="flex flex-wrap gap-4 items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-gilroy text-lg font-bold mr-4">Quick Actions</h2>
+                  <Button
+                    className="bg-primary text-white"
+                    startContent={<Icon icon="lucide:upload" className="h-4 w-4" />}
+                    onPress={() => navigateTo("document-upload")}
+                  >
+                    Upload Document
+                  </Button>
+                  <Button
+                    variant="flat"
+                    color="success"
+                    startContent={<Icon icon="lucide:file-plus" className="h-4 w-4" />}
+                    onPress={() => navigateTo("projects")}
+                  >
+                    Projects
+                  </Button>
+                  <Button
+                    variant="flat"
+                    color="warning"
+                    startContent={<Icon icon="lucide:users" className="h-4 w-4" />}
+                    onPress={() => navigateTo("vendor-management")}
+                  >
+                    Vendors
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="light"
+                    color="danger"
+                    startContent={<Icon icon="lucide:bar-chart" className="h-4 w-4" />}
+                    onPress={() => navigateTo("financial-dashboard")}
+                  >
+                    Financials
+                  </Button>
+                  <Button
+                    variant="light"
+                    color="default"
+                    startContent={<Icon icon="lucide:settings" className="h-4 w-4" />}
+                    onPress={() => navigateTo("settings")}
+                  >
+                    Settings
+                  </Button>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Activity */}
@@ -279,7 +293,7 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
                     variant="light"
                     color="primary"
                     endContent={<Icon icon="lucide:arrow-right" className="h-4 w-4" />}
-                    onPress={() => navigateTo("financial-dashboard")}
+                    onPress={() => navigateTo("documents")}
                   >
                     View all
                   </Button>
@@ -292,15 +306,6 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
                     <div className="p-4 text-center text-foreground-500">No recent documents found</div>
                   ) : (
                     recentDocuments
-                      .filter(doc => {
-                        if (!searchQuery) return true;
-                        const query = searchQuery.toLowerCase();
-                        return (
-                          doc.name.toLowerCase().includes(query) ||
-                          (doc.vendor && doc.vendor.toLowerCase().includes(query)) ||
-                          doc.type.toLowerCase().includes(query)
-                        );
-                      })
                       .map((doc, index) => (
                         <div
                           key={doc.id || index}
@@ -346,9 +351,50 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
             </Card>
           </div>
 
-          {/* Document Categories */}
-          <div>
-            <Card className="ambient-shadow mb-8">
+          {/* Right Sidebar */}
+          <div className="space-y-8">
+            {/* Top Vendors */}
+            <Card className="ambient-shadow">
+              <CardBody className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-gilroy text-lg font-bold">Top Vendors</h2>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    color="primary"
+                    onPress={() => navigateTo("vendor-management")}
+                  >
+                    View All
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {topVendors.map((vendor, index) => (
+                    <div
+                      key={index}
+                      className="cursor-pointer hover:bg-foreground-50 p-2 rounded-lg transition-colors"
+                      onClick={() => navigateTo("documents", { vendor: vendor.name })}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-xs">
+                            {vendor.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{vendor.name}</p>
+                            <p className="text-xs text-foreground-500">{vendor.count} documents</p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-semibold">{vendor.amount}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Document Categories */}
+            <Card className="ambient-shadow">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-gilroy text-lg font-bold">Document Categories</h2>
@@ -356,7 +402,14 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
 
                 <div className="space-y-5">
                   {documentCategories.map((category, index) => (
-                    <div key={index}>
+                    <div
+                      key={index}
+                      className="cursor-pointer hover:bg-foreground-50 p-2 rounded-lg transition-colors"
+                      onClick={() => {
+                        // Navigate to documents page with category filter
+                        navigateTo("documents", { category: category.name });
+                      }}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center">
                           <div className={`h-3 w-3 rounded-full bg-${category.color}-500 mr-2`}></div>
@@ -377,68 +430,6 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string) => void }> = (
               </CardBody>
             </Card>
 
-            {/* Quick Actions */}
-            <Card className="ambient-shadow">
-              <CardBody className="p-6">
-                <h2 className="font-gilroy text-lg font-bold mb-4">Quick Actions</h2>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="flat"
-                    color="primary"
-                    startContent={<Icon icon="lucide:upload" className="h-4 w-4" />}
-                    className="justify-start"
-                    onPress={() => navigateTo("document-upload")}
-                  >
-                    Upload
-                  </Button>
-                  <Button
-                    variant="flat"
-                    color="secondary"
-                    startContent={<Icon icon="lucide:search" className="h-4 w-4" />}
-                    className="justify-start"
-                    onPress={expandSearch}
-                  >
-                    Search
-                  </Button>
-                  <Button
-                    variant="flat"
-                    color="success"
-                    startContent={<Icon icon="lucide:file-plus" className="h-4 w-4" />}
-                    className="justify-start"
-                  >
-                    New Project
-                  </Button>
-                  <Button
-                    variant="flat"
-                    color="warning"
-                    startContent={<Icon icon="lucide:users" className="h-4 w-4" />}
-                    className="justify-start"
-                    onPress={() => navigateTo("vendor-management")}
-                  >
-                    Vendors
-                  </Button>
-                  <Button
-                    variant="flat"
-                    color="danger"
-                    startContent={<Icon icon="lucide:receipt" className="h-4 w-4" />}
-                    className="justify-start"
-                    onPress={() => navigateTo("financial-dashboard")}
-                  >
-                    Finances
-                  </Button>
-                  <Button
-                    variant="flat"
-                    color="default"
-                    startContent={<Icon icon="lucide:settings" className="h-4 w-4" />}
-                    className="justify-start"
-                    onPress={() => navigateTo("settings")}
-                  >
-                    Settings
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
           </div>
         </div>
       </main>

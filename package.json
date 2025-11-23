@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@azure/ai-form-recognizer": "^5.1.0",
+    "@clerk/clerk-react": "^5.56.2",
     "@heroui/react": "2.7.9",
     "@iconify/react": "latest",
     "@internationalized/date": "3.8.1",
