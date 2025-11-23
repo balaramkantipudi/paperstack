@@ -7,8 +7,10 @@ import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
 import { documentService } from "../services/document-service";
+import { useAuth } from "@clerk/clerk-react";
 
 export const DocumentUploadPage: React.FC<{ navigateTo: (view: string) => void }> = ({ navigateTo }) => {
+  const { userId } = useAuth();
   const [dragActive, setDragActive] = React.useState(false);
   const [files, setFiles] = React.useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = React.useState(0);
@@ -84,29 +86,45 @@ export const DocumentUploadPage: React.FC<{ navigateTo: (view: string) => void }
 
   const startUpload = async () => {
     if (files.length === 0) return;
+    if (!userId) {
+      console.error("User not authenticated, cannot upload documents.");
+      // Optionally show an error message to the user
+      return;
+    }
 
     setIsUploading(true);
+    setUploadProgress(0);
+    setProcessingStep(0);
 
     try {
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
+      let uploadedDocName: string | null = null; // To store the name of the last uploaded doc for navigation
 
-      // Use service to upload
-      const uploadedDoc = await documentService.uploadDocument(files[0]);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadProgress(Math.floor((i / files.length) * 100)); // Update overall upload progress
 
-      clearInterval(progressInterval);
+        // Simulate processing steps for the current file
+        for (let step = 0; step < processingSteps.length; step++) {
+          setProcessingStep(step);
+          await new Promise(resolve => setTimeout(resolve, 800)); // Simulate work
+        }
+
+        // Upload to Supabase
+        const uploadedDoc = await documentService.uploadDocument(file, userId);
+        uploadedDocName = uploadedDoc.name; // Keep track of the last uploaded doc's name
+      }
+
       setUploadProgress(100);
+      setProcessingStep(processingSteps.length); // Indicate all processing is done
 
-      // Start processing simulation
-      simulateProcessing(uploadedDoc.name);
+      // Navigate after all files are processed and uploaded
+      if (uploadedDocName) {
+        localStorage.setItem('processing_document', uploadedDocName);
+        setTimeout(() => navigateTo("document-processing"), 500);
+      } else {
+        // Handle case where no files were actually uploaded (e.g., if files array was empty initially)
+        setIsUploading(false);
+      }
 
     } catch (error) {
       console.error("Upload failed:", error);

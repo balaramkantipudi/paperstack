@@ -3,6 +3,8 @@ import { Button, Card, CardBody, Input, Table, TableHeader, TableColumn, TableBo
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
+import { documentService } from "../services/document-service";
+
 export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: any) => void }> = ({ navigateTo }) => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeTab, setActiveTab] = React.useState("all");
@@ -11,58 +13,24 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const rowsPerPage = 10;
 
-  const [vendors, setVendors] = React.useState([
-    {
-      id: 1,
-      name: "BuildSupply Inc.",
-      category: "Materials Supplier",
-      contact: "John Smith",
-      email: "john@buildsupply.com",
-      spent: 32450,
-      invoices: 18,
-      status: "Current"
-    },
-    {
-      id: 2,
-      name: "Metro Concrete",
-      category: "Materials Supplier",
-      contact: "Sarah Johnson",
-      email: "sarah@metroconcrete.com",
-      spent: 28750,
-      invoices: 12,
-      status: "Current"
-    },
-    {
-      id: 3,
-      name: "City Electric Supply",
-      category: "Electrical Supplier",
-      contact: "Mike Wilson",
-      email: "mike@cityelectric.com",
-      spent: 18650,
-      invoices: 15,
-      status: "Overdue"
-    },
-    {
-      id: 4,
-      name: "ConstructEquip Rentals",
-      category: "Equipment Rental",
-      contact: "Lisa Brown",
-      email: "lisa@constructequip.com",
-      spent: 15800,
-      invoices: 8,
-      status: "Current"
-    },
-    {
-      id: 5,
-      name: "PlumbPro Services",
-      category: "Plumbing Contractor",
-      contact: "David Miller",
-      email: "david@plumbpro.com",
-      spent: 12450,
-      invoices: 6,
-      status: "Current"
-    }
-  ]);
+  const [vendors, setVendors] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const loadVendorStats = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedVendors = await documentService.getVendors();
+        setVendors(fetchedVendors);
+      } catch (error) {
+        console.error("Failed to load vendors:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadVendorStats();
+  }, []);
 
   const [newVendor, setNewVendor] = React.useState({
     name: "",
@@ -70,6 +38,12 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: 
     contact: "",
     email: ""
   });
+
+  const handleDeleteVendor = (id: number) => {
+    if (confirm("Are you sure you want to delete this vendor?")) {
+      setVendors(vendors.filter(v => v.id !== id));
+    }
+  };
 
   const handleAddVendor = () => {
     if (!newVendor.name || !newVendor.category) return;
@@ -294,6 +268,18 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: 
                             color="success"
                           >
                             <Icon icon="lucide:credit-card" className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            isIconOnly
+                            variant="light"
+                            size="sm"
+                            color="danger"
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleDeleteVendor(vendor.id);
+                            }}
+                          >
+                            <Icon icon="lucide:trash-2" className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>

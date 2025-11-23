@@ -222,96 +222,44 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
     >
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card
-          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
-          isPressable
-          onPress={() => clerk.openUserProfile()}
-        >
-          <CardBody className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
-                <Icon icon="lucide:user-cog" className="h-5 w-5 text-primary-500" />
+        <div onClick={() => { console.log("Opening profile..."); clerk.openUserProfile(); }} className="cursor-pointer">
+          <Card
+            className="border border-foreground-200 hover:shadow-md transition-shadow"
+          >
+            <CardBody className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
+                  <Icon icon="lucide:user-cog" className="h-5 w-5 text-primary-500" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium mb-1">Manage Account</h4>
+                  <p className="text-sm text-foreground-500">Update profile and settings</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h4 className="font-medium mb-1">Manage Account</h4>
-                <p className="text-sm text-foreground-500">Update profile and settings</p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
+        </div>
 
 
-        <Card
-          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
-          isPressable
-          onPress={() => clerk.openUserProfile()}
-        >
-          <CardBody className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
-                <Icon icon="lucide:shield-check" className="h-5 w-5 text-primary-500" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium mb-1">Security</h4>
-                <p className="text-sm text-foreground-500">Enable 2FA and manage security settings</p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
 
-        <Card
-          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
-          isPressable
-          onPress={() => clerk.openUserProfile()}
-        >
-          <CardBody className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-secondary-50 flex items-center justify-center">
-                <Icon icon="lucide:bell" className="h-5 w-5 text-secondary-500" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium mb-1">Notifications</h4>
-                <p className="text-sm text-foreground-500">Configure email and push notifications</p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
 
-        <Card
-          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
-          isPressable
-          onPress={() => clerk.openUserProfile()}
-        >
-          <CardBody className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-success-50 flex items-center justify-center">
-                <Icon icon="lucide:key" className="h-5 w-5 text-success-500" />
+        <div onClick={() => clerk.openUserProfile()} className="cursor-pointer">
+          <Card
+            className="border border-foreground-200 hover:shadow-md transition-shadow"
+          >
+            <CardBody className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-secondary-50 flex items-center justify-center">
+                  <Icon icon="lucide:bell" className="h-5 w-5 text-secondary-500" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium mb-1">Notifications</h4>
+                  <p className="text-sm text-foreground-500">Configure email and push notifications</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h4 className="font-medium mb-1">Password</h4>
-                <p className="text-sm text-foreground-500">Update your password securely</p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card
-          className="border border-foreground-200 cursor-pointer hover:shadow-md transition-shadow"
-          isPressable
-          onPress={() => clerk.openUserProfile()}
-        >
-          <CardBody className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-warning-50 flex items-center justify-center">
-                <Icon icon="lucide:monitor-smartphone" className="h-5 w-5 text-warning-500" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium mb-1">Sessions</h4>
-                <p className="text-sm text-foreground-500">View and manage active sessions</p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
+        </div>
       </div>
     </motion.div >
 

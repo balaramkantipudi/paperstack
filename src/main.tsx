@@ -15,7 +15,28 @@ if (!PUBLISHABLE_KEY) {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      afterSignOutUrl="/"
+      appearance={{
+        variables: {
+          colorPrimary: '#006FEE',
+          fontFamily: 'Gilroy, sans-serif',
+          borderRadius: '0.5rem',
+        },
+        layout: {
+          socialButtonsPlacement: 'bottom',
+          socialButtonsVariant: 'blockButton',
+        },
+        elements: {
+          card: "shadow-none border border-foreground-200",
+          navbar: "hidden",
+          navbarMobileMenuButton: "hidden",
+          headerTitle: "font-gilroy font-bold",
+          headerSubtitle: "font-dmsans",
+        }
+      }}
+    >
       <HeroUIProvider>
         <ToastProvider />
         <main className="text-foreground bg-background">

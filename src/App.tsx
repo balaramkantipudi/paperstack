@@ -32,7 +32,21 @@ import { TermsPage } from "./components/terms-page";
 import { AboutPage } from "./components/about-page";
 import { ContactPage } from "./components/contact-page";
 
+import { useAuth } from "@clerk/clerk-react";
+import { getSupabaseClientWithAuth } from "./lib/supabase";
+import { documentService } from "./services/document-service";
+
 function App() {
+  const { getToken, isSignedIn, isLoaded } = useAuth();
+
+  // Initialize Supabase with Clerk token
+  React.useEffect(() => {
+    const initSupabase = async () => {
+      const client = await getSupabaseClientWithAuth(getToken);
+      documentService.setClient(client);
+    };
+    initSupabase();
+  }, [getToken]);
   // Change from hardcoded to state-based view management
   const [view, setView] = React.useState("landing");
   const [documentCategory, setDocumentCategory] = React.useState<string | undefined>(undefined);
@@ -99,6 +113,18 @@ function App() {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
+  // Protect routes that require authentication
+  React.useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      const publicViews = ["landing", "login", "signup", "privacy", "terms", "about", "contact"];
+      if (!publicViews.includes(view)) {
+        console.log("User not signed in, redirecting to login");
+        setView("login");
+        window.history.pushState({}, "", "/login");
+      }
+    }
+  }, [isLoaded, isSignedIn, view]);
 
   return (
     <div className="min-h-screen bg-background font-roboto text-foreground">

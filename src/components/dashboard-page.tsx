@@ -1,26 +1,48 @@
+
 import React from "react";
 import { Button, Card, CardBody, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Input, Badge, Progress } from "@heroui/react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 
-import { documentService, Document, DocumentStats } from "../services/document-service";
+import { documentService, Document, DocumentStats, CategoryStat, VendorStat } from "../services/document-service";
 
 export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) => void }> = ({ navigateTo }) => {
   const [selectedProject, setSelectedProject] = React.useState("All Projects");
   const [stats, setStats] = React.useState<DocumentStats | null>(null);
   const [recentDocuments, setRecentDocuments] = React.useState<Document[]>([]);
+  const [categories, setCategories] = React.useState<CategoryStat[]>([]);
+  const [topVendors, setTopVendors] = React.useState<VendorStat[]>([]);
+  const [notifications, setNotifications] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { userId } = useAuth();
+  const { user } = useUser();
+  const clerk = useClerk();
+
+  const handleSeedData = async () => {
+    if (!userId) return;
+    setIsLoading(true);
+    await documentService.seedData(userId);
+    // Reload data
+    window.location.reload();
+  };
 
   React.useEffect(() => {
     const loadDashboardData = async () => {
       setIsLoading(true);
       try {
-        const [fetchedStats, fetchedDocs] = await Promise.all([
+        const [fetchedStats, fetchedDocs, fetchedCategories, fetchedVendors, fetchedNotifications] = await Promise.all([
           documentService.getStats(),
-          documentService.getRecentDocuments()
+          documentService.getRecentDocuments(),
+          documentService.getCategoryStats(),
+          documentService.getTopVendors(),
+          documentService.getNotifications()
         ]);
         setStats(fetchedStats);
         setRecentDocuments(fetchedDocs);
+        setCategories(fetchedCategories);
+        setTopVendors(fetchedVendors);
+        setNotifications(fetchedNotifications);
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
       } finally {
@@ -49,7 +71,7 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
     },
     {
       title: "Time Saved",
-      value: stats ? `${Math.floor(stats.totalProcessed * 0.5)}h` : "0h",
+      value: stats ? `${stats.timeSaved} h` : "0h",
       change: "+8%",
       icon: "lucide:clock",
       color: "secondary"
@@ -63,27 +85,24 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
     },
     {
       title: "Tax Deductions",
-      value: stats ? `$${(stats.totalValue / 1000).toFixed(1)}k` : "$0",
+      value: stats ? `$${(stats.totalValue / 1000).toFixed(1)} k` : "$0",
       change: "+$2.1k",
       icon: "lucide:receipt",
       color: "success"
     }
   ];
 
-  const documentCategories = [
-    { name: "Invoices", count: 145, color: "primary" },
-    { name: "Receipts", count: 89, color: "secondary" },
-    { name: "Contracts", count: 12, color: "success" },
-    { name: "Permits", count: 8, color: "warning" },
-    { name: "Change Orders", count: 24, color: "danger" },
-  ];
+  const documentCategories = categories;
 
-  const topVendors = [
-    { name: "BuildSupply Inc.", amount: "$12,450", count: 5 },
-    { name: "ABC Contractors", amount: "$8,200", count: 3 },
-    { name: "City Hall", amount: "$1,200", count: 2 },
-    { name: "Hardware Store", amount: "$850", count: 8 },
-  ];
+  // Format currency for display
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
 
 
 
@@ -115,34 +134,30 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                   className="relative"
                 >
                   <Icon icon="lucide:bell" className="h-5 w-5" />
-                  <Badge content="3" color="primary" size="sm" className="absolute -top-1 -right-1" />
+                  {notifications.length > 0 && (
+                    <Badge content={notifications.length} color="primary" size="sm" className="absolute -top-1 -right-1" />
+                  )}
                 </Button>
               </DropdownTrigger>
               <DropdownMenu aria-label="Notifications" className="w-80">
                 <DropdownItem key="header" className="h-14 gap-2" textValue="Notifications">
                   <p className="font-semibold">Notifications</p>
                 </DropdownItem>
-                <DropdownItem key="notif1" textValue="Document processed">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium">Document processed successfully</p>
-                    <p className="text-xs text-foreground-500">Invoice #1234 from BuildSupply Inc.</p>
-                    <p className="text-xs text-foreground-400">2 minutes ago</p>
-                  </div>
-                </DropdownItem>
-                <DropdownItem key="notif2" textValue="Review needed">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium">Review needed</p>
-                    <p className="text-xs text-foreground-500">Low confidence on receipt categorization</p>
-                    <p className="text-xs text-foreground-400">1 hour ago</p>
-                  </div>
-                </DropdownItem>
-                <DropdownItem key="notif3" textValue="QuickBooks synced">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium">QuickBooks synced</p>
-                    <p className="text-xs text-foreground-500">15 documents synced successfully</p>
-                    <p className="text-xs text-foreground-400">3 hours ago</p>
-                  </div>
-                </DropdownItem>
+                {notifications.length === 0 ? (
+                  <DropdownItem key="empty" textValue="No notifications">
+                    <p className="text-sm text-foreground-500">No new notifications</p>
+                  </DropdownItem>
+                ) : (
+                  notifications.map((notif) => (
+                    <DropdownItem key={notif.id} textValue={notif.title}>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm font-medium">{notif.title}</p>
+                        <p className="text-xs text-foreground-500">{notif.message}</p>
+                        <p className="text-xs text-foreground-400">{notif.time}</p>
+                      </div>
+                    </DropdownItem>
+                  ))
+                )}
                 <DropdownItem key="view-all" className="text-primary" textValue="View all" onPress={() => navigateTo("documents")}>
                   <p className="text-center text-sm">View all notifications</p>
                 </DropdownItem>
@@ -152,27 +167,21 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
             <Dropdown>
               <DropdownTrigger>
                 <Button
-                  variant="light"
-                  className="flex items-center gap-2"
+                  variant="flat"
+                  color="default"
+                  startContent={<Icon icon="lucide:user" width={20} />}
                 >
-                  <div className="h-8 w-8 rounded-full bg-foreground-200"></div>
-                  <span className="hidden md:inline">John Contractor</span>
-                  <Icon icon="lucide:chevron-down" className="h-4 w-4" />
+                  Account
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu aria-label="User actions">
-                <DropdownItem
-                  key="settings"
-                  onPress={() => navigateTo("settings")}
-                >
-                  Settings
+              <DropdownMenu aria-label="Account actions">
+                <DropdownItem key="profile" startContent={<Icon icon="lucide:user" />} onClick={() => navigateTo("settings")}>
+                  Profile & Settings
                 </DropdownItem>
-                <DropdownItem
-                  key="logout"
-                  className="text-danger"
-                  color="danger"
-                  onPress={() => navigateTo("landing")}
-                >
+                <DropdownItem key="seed" startContent={<Icon icon="lucide:database" />} onClick={handleSeedData} className="text-warning">
+                  Seed Sample Data
+                </DropdownItem>
+                <DropdownItem key="logout" className="text-danger" color="danger" startContent={<Icon icon="lucide:log-out" />} onPress={() => clerk.signOut()}>
                   Log Out
                 </DropdownItem>
               </DropdownMenu>
@@ -187,7 +196,7 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="font-gilroy text-2xl md:text-3xl font-bold mb-1">Dashboard</h1>
-            <p className="text-foreground-500">Welcome back, John. Here's what's happening today.</p>
+            <p className="text-foreground-500">Welcome back, {user?.firstName || 'User'}. Here's what's happening today.</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -213,12 +222,12 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                     <div>
                       <p className="text-sm text-foreground-500 mb-1">{metric.title}</p>
                       <h3 className="font-gilroy text-2xl font-bold">{metric.value}</h3>
-                      <p className={`text-xs mt-1 ${metric.change.includes('+') ? 'text-success-500' : 'text-danger-500'}`}>
+                      <p className={`text - xs mt - 1 ${metric.change.includes('+') ? 'text-success-500' : 'text-danger-500'} `}>
                         {metric.change} from last month
                       </p>
                     </div>
-                    <div className={`h-10 w-10 rounded-full bg-${metric.color}-50 flex items-center justify-center`}>
-                      <Icon icon={metric.icon} className={`h-5 w-5 text-${metric.color}-500`} />
+                    <div className={`h - 10 w - 10 rounded - full bg - ${metric.color} -50 flex items - center justify - center`}>
+                      <Icon icon={metric.icon} className={`h - 5 w - 5 text - ${metric.color} -500`} />
                     </div>
                   </div>
                 </CardBody>
@@ -316,9 +325,9 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                             <div className="h-10 w-10 rounded-md bg-primary-50 flex items-center justify-center mr-4">
                               <Icon
                                 icon={
-                                  doc.type === "invoice" ? "lucide:file-text" :
-                                    doc.type === "receipt" ? "lucide:receipt" :
-                                      doc.type === "contract" ? "lucide:file-signature" :
+                                  doc.type === "Invoice" ? "lucide:file-text" :
+                                    doc.type === "Receipt" ? "lucide:receipt" :
+                                      doc.type === "Contract" ? "lucide:file-signature" :
                                         "lucide:file"
                                 }
                                 className="h-5 w-5 text-primary-500"
@@ -385,7 +394,7 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                             <p className="text-xs text-foreground-500">{vendor.count} documents</p>
                           </div>
                         </div>
-                        <span className="text-sm font-semibold">{vendor.amount}</span>
+                        <span className="text-sm font-semibold">{formatCurrency(vendor.amount)}</span>
                       </div>
                     </div>
                   ))}
@@ -412,7 +421,7 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center">
-                          <div className={`h-3 w-3 rounded-full bg-${category.color}-500 mr-2`}></div>
+                          <div className={`h - 3 w - 3 rounded - full bg - ${category.color} -500 mr - 2`}></div>
                           <span className="text-sm font-medium">{category.name}</span>
                         </div>
                         <span className="text-sm text-foreground-500">{category.count}</span>

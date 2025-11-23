@@ -3,34 +3,47 @@ import { Button, Card, CardBody, Input, Dropdown, DropdownTrigger, DropdownMenu,
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
+import { documentService, Document, CategoryStat } from "../services/document-service";
+
 export const DocumentsPage: React.FC<{ navigateTo: (view: string, data?: any) => void; initialCategory?: string; initialVendor?: string }> = ({ navigateTo, initialCategory, initialVendor }) => {
     const [selectedCategory, setSelectedCategory] = React.useState(initialCategory || "all");
     const [selectedVendor, setSelectedVendor] = React.useState(initialVendor || "all");
     const [searchQuery, setSearchQuery] = React.useState("");
     const [sortBy, setSortBy] = React.useState("date_desc");
 
-    const documents = [
-        { id: 1, name: "BuildSupply Inc. Invoice", category: "Invoices", vendor: "BuildSupply Inc.", amount: 2450.00, date: "2024-01-15", status: "Processed", project: "Downtown Office Tower" },
-        { id: 2, name: "Hardware Store Receipt", category: "Receipts", vendor: "Hardware Store", amount: 156.75, date: "2024-01-14", status: "Processed", project: "Westside Residential" },
-        { id: 3, name: "Subcontractor Agreement", category: "Contracts", vendor: "ABC Contractors", amount: 15000.00, date: "2024-01-13", status: "Review", project: "Harbor Bridge" },
-        { id: 4, name: "City Building Permit", category: "Permits", vendor: "City Hall", amount: 850.00, date: "2024-01-12", status: "Processed", project: "Downtown Office Tower" },
-        { id: 5, name: "Material Change Order", category: "Change Orders", vendor: "BuildSupply Inc.", amount: 3200.00, date: "2024-01-11", status: "Processed", project: "City Center Mall" },
-        { id: 6, name: "Equipment Rental Invoice", category: "Invoices", vendor: "Equipment Rentals Co.", amount: 1200.00, date: "2024-01-10", status: "Processed", project: "Westside Residential" },
-        { id: 7, name: "Lumber Receipt", category: "Receipts", vendor: "Lumber Yard", amount: 4500.00, date: "2024-01-09", status: "Processed", project: "Harbor Bridge" },
-        { id: 8, name: "Insurance Certificate", category: "Contracts", vendor: "Insurance Co.", amount: 2400.00, date: "2024-01-08", status: "Processed", project: "Downtown Office Tower" },
-    ];
+    const [documents, setDocuments] = React.useState<Document[]>([]);
+    const [categories, setCategories] = React.useState<CategoryStat[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
 
-    const categories = [
-        { id: "all", name: "All Documents", count: documents.length, color: "default" },
-        { id: "Invoices", name: "Invoices", count: documents.filter(d => d.category === "Invoices").length, color: "primary" },
-        { id: "Receipts", name: "Receipts", count: documents.filter(d => d.category === "Receipts").length, color: "secondary" },
-        { id: "Contracts", name: "Contracts", count: documents.filter(d => d.category === "Contracts").length, color: "success" },
-        { id: "Permits", name: "Permits", count: documents.filter(d => d.category === "Permits").length, color: "warning" },
-        { id: "Change Orders", name: "Change Orders", count: documents.filter(d => d.category === "Change Orders").length, color: "danger" },
-    ];
+    React.useEffect(() => {
+        const loadData = async () => {
+            setIsLoading(true);
+            try {
+                const [fetchedDocs, fetchedCategories] = await Promise.all([
+                    documentService.getDocuments(),
+                    documentService.getCategoryStats()
+                ]);
+                setDocuments(fetchedDocs);
+                // Add "All Documents" category manually
+                setCategories([
+                    { name: "All Documents", count: fetchedDocs.length, color: "default" },
+                    ...fetchedCategories
+                ]);
+            } catch (error) {
+                console.error("Failed to load documents:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadData();
+    }, []);
 
     const filteredDocuments = documents
-        .filter(doc => selectedCategory === "all" || doc.category === selectedCategory)
+        .filter(doc => {
+            if (selectedCategory === "all" || selectedCategory === "All Documents") return true;
+            // Match "Invoice" type to "Invoices" category
+            return (doc.type + "s") === selectedCategory || doc.type === selectedCategory;
+        })
         .filter(doc => selectedVendor === "all" || doc.vendor === selectedVendor)
         .filter(doc =>
             searchQuery === "" ||
@@ -108,7 +121,7 @@ export const DocumentsPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                     >
                         {categories.map((cat) => (
                             <Tab
-                                key={cat.id}
+                                key={cat.name}
                                 title={
                                     <div className="flex items-center gap-2">
                                         <span>{cat.name}</span>
@@ -196,7 +209,7 @@ export const DocumentsPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                                                 <p className="text-2xl font-bold">${doc.amount.toLocaleString()}</p>
                                                 <Chip
                                                     size="sm"
-                                                    color={doc.status === "Processed" ? "success" : "warning"}
+                                                    color={doc.status === "approved" || doc.status === "exported" ? "success" : "warning"}
                                                     variant="flat"
                                                 >
                                                     {doc.status}

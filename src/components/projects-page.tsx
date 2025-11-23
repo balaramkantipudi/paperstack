@@ -3,67 +3,31 @@ import { Button, Card, CardBody, Input, Dropdown, DropdownTrigger, DropdownMenu,
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
+import { documentService } from "../services/document-service";
+
 export const ProjectsPage: React.FC<{ navigateTo: (view: string) => void }> = ({ navigateTo }) => {
     const [selectedTab, setSelectedTab] = React.useState("active");
     const [searchQuery, setSearchQuery] = React.useState("");
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-    const [projects, setProjects] = React.useState([
-        {
-            id: 1,
-            name: "Downtown Office Tower",
-            client: "ABC Corporation",
-            budget: 2500000,
-            spent: 1875000,
-            status: "active",
-            progress: 75,
-            startDate: "2024-01-15",
-            endDate: "2024-12-31",
-            documents: 124,
-            expenses: [
-                { category: "Materials", amount: 850000 },
-                { category: "Labor", amount: 625000 },
-                { category: "Equipment", amount: 250000 },
-                { category: "Permits", amount: 150000 }
-            ]
-        },
-        {
-            id: 2,
-            name: "Westside Residential Complex",
-            client: "Green Homes LLC",
-            budget: 1800000,
-            spent: 1260000,
-            status: "active",
-            progress: 70,
-            startDate: "2024-02-01",
-            endDate: "2024-11-30",
-            documents: 87,
-            expenses: [
-                { category: "Materials", amount: 580000 },
-                { category: "Labor", amount: 450000 },
-                { category: "Equipment", amount: 180000 },
-                { category: "Permits", amount: 50000 }
-            ]
-        },
-        {
-            id: 3,
-            name: "Harbor Bridge Renovation",
-            client: "City Infrastructure",
-            budget: 3200000,
-            spent: 3200000,
-            status: "completed",
-            progress: 100,
-            startDate: "2023-06-01",
-            endDate: "2024-01-31",
-            documents: 156,
-            expenses: [
-                { category: "Materials", amount: 1400000 },
-                { category: "Labor", amount: 1200000 },
-                { category: "Equipment", amount: 450000 },
-                { category: "Permits", amount: 150000 }
-            ]
-        }
-    ]);
+    const [projects, setProjects] = React.useState<any[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const loadProjects = async () => {
+            setIsLoading(true);
+            try {
+                const fetchedProjects = await documentService.getProjects();
+                setProjects(fetchedProjects);
+            } catch (error) {
+                console.error("Failed to load projects:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadProjects();
+    }, []);
 
     const [newProject, setNewProject] = React.useState({
         name: "",
@@ -72,6 +36,12 @@ export const ProjectsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
         startDate: "",
         endDate: ""
     });
+
+    const handleDeleteProject = (id: number) => {
+        if (confirm("Are you sure you want to delete this project?")) {
+            setProjects(projects.filter(p => p.id !== id));
+        }
+    };
 
     const handleAddProject = () => {
         if (!newProject.name || !newProject.client) return;
@@ -190,12 +160,23 @@ export const ProjectsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
                                                     <h3 className="font-gilroy text-xl font-bold mb-1">{project.name}</h3>
                                                     <p className="text-foreground-500">{project.client}</p>
                                                 </div>
-                                                <Chip
-                                                    color={project.status === "active" ? "success" : "default"}
-                                                    variant="flat"
-                                                >
-                                                    {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                                                </Chip>
+                                                <div className="flex items-center gap-2">
+                                                    <Chip
+                                                        color={project.status === "active" ? "success" : "default"}
+                                                        variant="flat"
+                                                    >
+                                                        {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                                                    </Chip>
+                                                    <Button
+                                                        isIconOnly
+                                                        variant="light"
+                                                        size="sm"
+                                                        color="danger"
+                                                        onPress={() => handleDeleteProject(project.id)}
+                                                    >
+                                                        <Icon icon="lucide:trash-2" className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">

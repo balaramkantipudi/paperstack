@@ -1,15 +1,18 @@
 import React from "react";
 import {
   Button, Card, CardBody, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,
-  Input, Badge, Progress, Tooltip, Tabs, Tab, Table, TableHeader, TableColumn, TableBody,
-  TableRow, TableCell
+  Badge, Progress
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { useUser } from "@clerk/clerk-react";
+
+import { documentService } from "../services/document-service";
 
 export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => void }> = ({ navigateTo }) => {
   const [selectedProject, setSelectedProject] = React.useState("All Projects");
   const [selectedDateRange, setSelectedDateRange] = React.useState("This Month");
+  const { user } = useUser();
 
   const projects = [
     "All Projects",
@@ -29,179 +32,55 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
     "Custom Range"
   ];
 
-  const documentStatus = [
-    {
-      title: "Recently Uploaded",
-      count: 12,
-      icon: "lucide:upload-cloud",
-      color: "primary"
-    },
-    {
-      title: "Awaiting Review",
-      count: 5,
-      icon: "lucide:file-search",
-      color: "warning"
-    },
-    {
-      title: "Processed & Synced",
-      count: 248,
-      icon: "lucide:check-circle",
-      color: "success"
-    }
-  ];
 
-  const recentDocuments = [
-    {
-      name: "Invoice #2458",
-      vendor: "BuildSupply Inc.",
-      type: "Invoice",
-      amount: "$1,193.25",
-      date: "Today, 10:45 AM",
-      status: "Processed",
-      project: "Downtown Office Tower"
-    },
-    {
-      name: "Permit Application",
-      vendor: "City Planning Dept.",
-      type: "Legal",
-      amount: "$350.00",
-      date: "Today, 9:12 AM",
-      status: "Awaiting Review",
-      project: "Westside Residential Complex"
-    },
-    {
-      name: "Material Receipt",
-      vendor: "Metro Concrete",
-      type: "Receipt",
-      amount: "$2,450.75",
-      date: "Yesterday",
-      status: "Processed",
-      project: "Harbor Bridge Renovation"
-    },
-    {
-      name: "Subcontractor Agreement",
-      vendor: "ElectroPro Services",
-      type: "Contract",
-      amount: "$8,750.00",
-      date: "Yesterday",
-      status: "Processed",
-      project: "City Center Mall"
-    },
-    {
-      name: "Change Order #12",
-      vendor: "ConstructEquip Rentals",
-      type: "Change Order",
-      amount: "$1,250.00",
-      date: "Jul 12, 2023",
-      status: "Awaiting Review",
-      project: "Downtown Office Tower"
-    }
-  ];
 
-  const expenseCategories = [
-    { name: "Materials", amount: 45250, percentage: 38, color: "primary" },
-    { name: "Labor", amount: 32800, percentage: 27, color: "success" },
-    { name: "Subcontractors", amount: 24600, percentage: 20, color: "secondary" },
-    { name: "Equipment Rental", amount: 12400, percentage: 10, color: "warning" },
-    { name: "Permits & Fees", amount: 3650, percentage: 3, color: "danger" },
-    { name: "Other", amount: 2300, percentage: 2, color: "default" }
-  ];
 
-  const projectBudgets = [
-    {
-      name: "Downtown Office Tower",
-      budget: 250000,
-      actual: 187500,
-      percentage: 75,
-      status: "On Budget"
-    },
-    {
-      name: "Westside Residential Complex",
-      budget: 175000,
-      actual: 148750,
-      percentage: 85,
-      status: "Over Budget"
-    },
-    {
-      name: "Harbor Bridge Renovation",
-      budget: 320000,
-      actual: 192000,
-      percentage: 60,
-      status: "On Budget"
-    },
-    {
-      name: "City Center Mall",
-      budget: 420000,
-      actual: 126000,
-      percentage: 30,
-      status: "Under Budget"
-    }
-  ];
+  const [stats, setStats] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const taxDeductions = [
-    {
-      category: "Equipment Purchases",
-      amount: 28750,
-      potential: 7187.50,
-      section: "Section 179"
-    },
-    {
-      category: "Vehicle Expenses",
-      amount: 12450,
-      potential: 3112.50,
-      section: "Mileage Deduction"
-    },
-    {
-      category: "Insurance Premiums",
-      amount: 8750,
-      potential: 2187.50,
-      section: "Business Insurance"
-    },
-    {
-      category: "Contract Labor",
-      amount: 42500,
-      potential: 10625.00,
-      section: "1099 Contractors"
-    }
-  ];
+  const [expenseCategories, setExpenseCategories] = React.useState<any[]>([]);
+  const [projectBudgets, setProjectBudgets] = React.useState<any[]>([]);
 
-  const topVendors = [
-    {
-      name: "BuildSupply Inc.",
-      spent: 32450,
-      invoices: 18,
-      status: "Current",
-      upcoming: 4850
-    },
-    {
-      name: "Metro Concrete",
-      spent: 28750,
-      invoices: 12,
-      status: "Current",
-      upcoming: 0
-    },
-    {
-      name: "City Electric Supply",
-      spent: 18650,
-      invoices: 15,
-      status: "Overdue",
-      upcoming: 3250
-    },
-    {
-      name: "ConstructEquip Rentals",
-      spent: 15800,
-      invoices: 8,
-      status: "Current",
-      upcoming: 2750
-    },
-    {
-      name: "PlumbPro Services",
-      spent: 12450,
-      invoices: 6,
-      status: "Current",
-      upcoming: 0
-    }
-  ];
+  React.useEffect(() => {
+    const loadFinancialData = async () => {
+      setIsLoading(true);
+      try {
+        const [fetchedStats, fetchedCategories, fetchedProjects] = await Promise.all([
+          documentService.getStats(),
+          documentService.getCategoryStats(),
+          documentService.getProjects()
+        ]);
+        setStats(fetchedStats);
+
+        // Transform categories for expense chart
+        const totalDocs = fetchedStats.totalProcessed || 1;
+        setExpenseCategories(fetchedCategories.map(cat => ({
+          name: cat.name,
+          amount: 0, // We don't have per-category amount yet, would need aggregation
+          percentage: Math.round((cat.count / totalDocs) * 100),
+          color: cat.color
+        })));
+
+        // Transform projects for budget list
+        setProjectBudgets(fetchedProjects.map(p => ({
+          name: p.name,
+          budget: p.budget,
+          actual: p.spent,
+          percentage: p.progress,
+          status: p.spent > p.budget ? "Over Budget" : "On Budget"
+        })));
+
+      } catch (error) {
+        console.error("Failed to load financial data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFinancialData();
+  }, []);
+
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -229,51 +108,15 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
           </div>
 
           <div className="flex items-center space-x-6">
-            <div className="relative">
-              <Button
-                isIconOnly
-                variant="light"
-                aria-label="Notifications"
-              >
-                <Icon icon="lucide:bell" className="h-5 w-5" />
-              </Button>
-              <Badge content="3" color="primary" size="sm" className="absolute -top-1 -right-1" />
-            </div>
 
-            <Dropdown>
-              <DropdownTrigger>
-                <Button
-                  variant="light"
-                  className="flex items-center gap-2"
-                >
-                  <div className="h-8 w-8 rounded-full bg-foreground-200"></div>
-                  <span className="hidden md:inline">John Contractor</span>
-                  <Icon icon="lucide:chevron-down" className="h-4 w-4" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu aria-label="User actions">
-                <DropdownItem
-                  key="profile"
-                  onPress={() => navigateTo("profile")}
-                >
-                  Profile
-                </DropdownItem>
-                <DropdownItem
-                  key="settings"
-                  onPress={() => navigateTo("settings")}
-                >
-                  Settings
-                </DropdownItem>
-                <DropdownItem
-                  key="logout"
-                  className="text-danger"
-                  color="danger"
-                  onPress={() => navigateTo("landing")}
-                >
-                  Log Out
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+
+            <Button
+              variant="light"
+              onPress={() => navigateTo("dashboard")}
+              startContent={<Icon icon="lucide:arrow-left" className="h-4 w-4" />}
+            >
+              Back to Dashboard
+            </Button>
           </div>
         </div>
       </header>
@@ -283,8 +126,8 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
         {/* Dashboard Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="font-gilroy text-2xl md:text-3xl font-bold mb-1">Financial Dashboard</h1>
-            <p className="text-foreground-500">Track your construction expenses, budgets, and tax deductions</p>
+            <h1 className="font-gilroy text-2xl md:text-3xl font-bold mb-1">Financial Overview</h1>
+            <p className="text-foreground-500">Track your project expenses and document processing status.</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -328,13 +171,7 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
               </Dropdown>
             </div>
 
-            <Button
-              color="primary"
-              startContent={<Icon icon="lucide:upload" className="h-4 w-4" />}
-              onPress={() => navigateTo("document-upload")}
-            >
-              Upload
-            </Button>
+
           </div>
         </div>
 
@@ -342,9 +179,9 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
 
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-8">
+        <div className="grid grid-cols-1 gap-8">
+          {/* Full Width Column */}
+          <div className="space-y-8">
             {/* Expense Breakdown */}
             <Card className="ambient-shadow">
               <CardBody className="p-6">
@@ -412,7 +249,7 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
                           <p className="text-sm text-foreground-500">Total</p>
-                          <p className="font-bold text-lg">$121,000</p>
+                          <p className="font-bold text-lg">{stats ? formatCurrency(stats.totalValue) : "$0"}</p>
                         </div>
                       </div>
                     </div>
@@ -515,184 +352,6 @@ export const FinancialDashboardPage: React.FC<{ navigateTo: (view: string) => vo
                           View Breakdown
                         </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-8">
-            {/* Tax Deduction Finder */}
-            <Card className="ambient-shadow">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-gilroy text-lg font-bold">Tax Deduction Finder</h2>
-                  <Tooltip content="Potential tax deductions based on your expenses">
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                    >
-                      <Icon icon="lucide:info" className="h-4 w-4" />
-                    </Button>
-                  </Tooltip>
-                </div>
-
-                <div className="space-y-4">
-                  {taxDeductions.map((deduction, index) => (
-                    <div key={index} className="border border-foreground-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-success-50 flex items-center justify-center mr-3">
-                            <Icon icon="lucide:receipt" className="h-4 w-4 text-success-500" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{deduction.category}</p>
-                            <p className="text-xs text-foreground-500">{deduction.section}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between mt-3">
-                        <div>
-                          <p className="text-xs text-foreground-500">Total Spent</p>
-                          <p className="font-medium">{formatCurrency(deduction.amount)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-success-600">Potential Savings</p>
-                          <p className="font-medium text-success-600">{formatCurrency(deduction.potential)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-foreground-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-foreground-500">Total Potential Savings</p>
-                      <p className="font-bold text-success-600 text-xl">{formatCurrency(23112.50)}</p>
-                    </div>
-                    <Button
-                      color="success"
-                      variant="flat"
-                      startContent={<Icon icon="lucide:file-text" className="h-4 w-4" />}
-                    >
-                      Tax Report
-                    </Button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Vendor Analysis */}
-            <Card className="ambient-shadow">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-gilroy text-lg font-bold">Top Vendors</h2>
-                  <Button
-                    variant="light"
-                    color="primary"
-                    size="sm"
-                    endContent={<Icon icon="lucide:arrow-right" className="h-4 w-4" />}
-                    onPress={() => navigateTo("vendor-management")}
-                  >
-                    View All
-                  </Button>
-                </div>
-
-                <Table
-                  aria-label="Top vendors table"
-                  removeWrapper
-                >
-                  <TableHeader>
-                    <TableColumn>VENDOR</TableColumn>
-                    <TableColumn>SPENT</TableColumn>
-                    <TableColumn>STATUS</TableColumn>
-                  </TableHeader>
-                  <TableBody>
-                    {topVendors.slice(0, 3).map((vendor, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <div className="font-medium">{vendor.name}</div>
-                          <div className="text-xs text-foreground-500">{vendor.invoices} invoices</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">{formatCurrency(vendor.spent)}</div>
-                          {vendor.upcoming > 0 && (
-                            <div className="text-xs text-warning-600">
-                              {formatCurrency(vendor.upcoming)} due soon
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            color={vendor.status === "Current" ? "success" : "danger"}
-                            variant="flat"
-                          >
-                            {vendor.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardBody>
-            </Card>
-
-            {/* Recent Documents */}
-            <Card className="ambient-shadow">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-gilroy text-lg font-bold">Recent Documents</h2>
-                  <Button
-                    variant="light"
-                    color="primary"
-                    size="sm"
-                    endContent={<Icon icon="lucide:arrow-right" className="h-4 w-4" />}
-                    onPress={() => navigateTo("documents")}
-                  >
-                    View All
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {recentDocuments.slice(0, 3).map((doc, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 hover:bg-foreground-50 rounded-md transition-colors cursor-pointer"
-                      onClick={() => navigateTo("document-review")}
-                    >
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-md bg-primary-50 flex items-center justify-center mr-4">
-                          <Icon
-                            icon={
-                              doc.type === "Invoice" ? "lucide:file-text" :
-                                doc.type === "Receipt" ? "lucide:receipt" :
-                                  doc.type === "Contract" ? "lucide:file-signature" :
-                                    doc.type === "Legal" ? "lucide:scale" :
-                                      "lucide:file-plus"
-                            }
-                            className="h-5 w-5 text-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <div className="flex items-center text-xs text-foreground-500">
-                            <span>{doc.vendor}</span>
-                            <span className="mx-2">•</span>
-                            <span>{doc.amount}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <Badge
-                        color={doc.status === "Processed" ? "success" : "warning"}
-                        variant="flat"
-                      >
-                        {doc.status}
-                      </Badge>
                     </div>
                   ))}
                 </div>
