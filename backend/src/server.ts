@@ -15,9 +15,22 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize Supabase
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Initialize Supabase Lazily
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+function getSupabase() {
+    if (supabaseInstance) return supabaseInstance;
+
+    const supabaseUrl = process.env.SUPABASE_URL || '';
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error("Supabase credentials missing. Please check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.");
+    }
+
+    supabaseInstance = createClient(supabaseUrl, supabaseServiceKey);
+    return supabaseInstance;
+}
 
 // Health Check
 app.get('/', (req, res) => {
@@ -37,7 +50,7 @@ app.post('/api/process-document', async (req, res) => {
         const analysis = await analyzeDocument(fileUrl);
 
         // 2. Update Supabase
-        const { error } = await supabase
+        const { error } = await getSupabase()
             .from('documents')
             .update({
                 vendor: analysis.vendor,
