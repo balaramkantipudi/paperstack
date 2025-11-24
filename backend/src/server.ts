@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { analyzeDocument } from './services/azure-service';
-import { createCheckoutSession } from './services/stripe-service';
+import { createCheckoutSession, getStripe } from './services/stripe-service';
 
 dotenv.config();
 
@@ -11,8 +11,17 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
+// Middleware
 app.use(cors());
-app.use(express.json());
+
+// Use JSON parser for all routes EXCEPT webhook
+app.use((req, res, next) => {
+    if (req.originalUrl === '/api/webhooks/stripe') {
+        next();
+    } else {
+        express.json()(req, res, next);
+    }
+});
 
 // Initialize Supabase
 // Initialize Supabase Lazily
@@ -75,19 +84,79 @@ app.post('/api/process-document', async (req, res) => {
 // Stripe Checkout Endpoint
 app.post('/api/create-checkout-session', async (req, res) => {
     try {
-        const { priceId, successUrl, cancelUrl } = req.body;
+        const { priceId, successUrl, cancelUrl, userId } = req.body; // Expect userId
 
         if (!priceId || !successUrl || !cancelUrl) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        const session = await createCheckoutSession(priceId, successUrl, cancelUrl);
-        res.json(session);
+        const session = await getStripe().checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price: priceId,
+                    quantity: 1,
+                },
+            ],
+            mode: 'subscription',
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+            client_reference_id: userId, // Pass userId to webhook
+        });
+        res.json({ sessionId: session.id, url: session.url });
 
     } catch (error: any) {
         console.error('Stripe Error:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+// Stripe Webhook Endpoint
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!sig || !webhookSecret) {
+        return res.status(400).send('Missing signature or webhook secret');
+    }
+
+    let event;
+
+    try {
+        event = getStripe().webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err: any) {
+        console.error(`Webhook Error: ${err.message}`);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as any;
+        const userId = session.client_reference_id;
+        const subscriptionId = session.subscription;
+        const customerId = session.customer;
+
+        if (userId) {
+            console.log(`Processing subscription for user: ${userId}`);
+            // Update Supabase
+            const { error } = await (getSupabase()
+                .from('subscriptions') as any)
+                .upsert({
+                    user_id: userId,
+                    stripe_customer_id: customerId,
+                    stripe_subscription_id: subscriptionId,
+                    status: 'active',
+                    plan_type: 'pro', // Assuming this is the pro plan
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+
+            if (error) {
+                console.error('Supabase Update Error:', error);
+            }
+        }
+    }
+
+    res.json({ received: true });
 });
 
 // Start Server
