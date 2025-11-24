@@ -24,14 +24,14 @@ export async function analyzeDocument(fileUrl: string) {
 
         return {
             vendor: fields.VendorName?.content || "Unknown Vendor",
-            date: fields.InvoiceDate?.value ? new Date(fields.InvoiceDate.value).toISOString() : new Date().toISOString(),
-            amount: fields.InvoiceTotal?.value || 0,
+            date: (fields.InvoiceDate as any)?.value ? new Date((fields.InvoiceDate as any).value).toISOString() : new Date().toISOString(),
+            amount: (fields.InvoiceTotal as any)?.value || 0,
             id: fields.InvoiceId?.content || "",
-            items: (fields.Items?.values || []).map((item: any) => ({
-                description: item.properties.Description?.content || "Item",
-                quantity: item.properties.Quantity?.value || 1,
-                unitPrice: item.properties.UnitPrice?.value || 0,
-                amount: item.properties.Amount?.value || 0
+            items: ((fields.Items as any)?.values || []).map((item: any) => ({
+                description: (item.properties.Description as any)?.content || "Item",
+                quantity: (item.properties.Quantity as any)?.value || 1,
+                unitPrice: (item.properties.UnitPrice as any)?.value || 0,
+                amount: (item.properties.Amount as any)?.value || 0
             }))
         };
     } catch (error) {
