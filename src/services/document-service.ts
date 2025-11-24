@@ -310,11 +310,23 @@ class DocumentService {
     }
 
     async uploadDocument(file: File, userId: string): Promise<Document> {
-        // For MVP, we'll just insert a placeholder record
-        // In production, this would upload to Storage bucket first
-
         if (!userId) throw new Error("User ID is required for upload");
 
+        // 1. Upload file to Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}/${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await this.client.storage
+            .from('documents')
+            .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        // 2. Get Public URL
+        const { data: { publicUrl } } = this.client.storage
+            .from('documents')
+            .getPublicUrl(fileName);
+
+        // 3. Create Initial Record
         const newDoc = {
             clerk_user_id: userId,
             name: file.name,
@@ -322,26 +334,42 @@ class DocumentService {
             status: 'processing',
             amount: 0,
             date: new Date().toISOString().split('T')[0],
-            // We need to link to a vendor/project. For now, we'll leave them null or use a default if exists.
+            file_url: publicUrl
         };
 
-        const { data, error } = await this.client.from('documents').insert(newDoc).select().single();
+        const { data: docData, error: dbError } = await this.client
+            .from('documents')
+            .insert(newDoc)
+            .select()
+            .single();
 
-        if (error) throw error;
+        if (dbError) throw dbError;
+
+        // 4. Trigger Backend Processing (Fire and Forget or Await)
+        // We don't await this because it might take time. The UI will update via Realtime subscription.
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+        fetch(`${backendUrl}/api/process-document`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fileUrl: publicUrl,
+                userId: userId,
+                documentId: docData.id
+            })
+        }).catch(err => console.error("Backend processing trigger failed:", err));
 
         return {
-            id: data.id,
-            name: data.name,
-            type: data.type,
-            status: data.status,
-            amount: data.amount,
-            date: data.date,
-            vendor: 'Pending',
+            id: docData.id,
+            name: docData.name,
+            type: docData.type,
+            status: docData.status,
+            amount: docData.amount,
+            date: docData.date,
+            vendor: 'Pending', // Will be updated by backend
             project: 'Unassigned',
-            fileUrl: data.file_url
+            fileUrl: docData.file_url
         };
     }
 }
 
 export const documentService = new DocumentService();
-
