@@ -50,8 +50,8 @@ app.post('/api/process-document', async (req, res) => {
         const analysis = await analyzeDocument(fileUrl);
 
         // 2. Update Supabase
-        const { error } = await getSupabase()
-            .from('documents')
+        const { error } = await (getSupabase()
+            .from('documents') as any)
             .update({
                 vendor: analysis.vendor,
                 amount: analysis.amount,
