@@ -18,6 +18,7 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
   const [language, setLanguage] = React.useState("en-US");
   const [dateFormat, setDateFormat] = React.useState("MM/DD/YYYY");
   const [currency, setCurrency] = React.useState("USD");
+  const [taxRegion, setTaxRegion] = React.useState("US-CA"); // Default to California for now
   const [defaultProject, setDefaultProject] = React.useState("all");
 
   // Integrations state
@@ -177,6 +178,7 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
           <ul className="space-y-1">
             {[
               { id: "profile", label: "Account Settings", icon: "lucide:user" },
+              { id: "localization", label: "Localization & Tax", icon: "lucide:globe" },
               { id: "integrations", label: "Integrations", icon: "lucide:plug" },
               { id: "billing", label: "Billing & Subscription", icon: "lucide:credit-card" }
             ].map((item) => (
@@ -380,6 +382,71 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
                   </div>
                   <Switch defaultSelected color="primary" />
                 </div>
+              </div>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+    </motion.div>
+  );
+
+  const renderLocalization = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card className="ambient-shadow mb-8">
+        <CardBody className="p-6">
+          <h2 className="font-gilroy text-xl font-bold mb-6">Localization & Tax Region</h2>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-foreground-700 mb-2">
+                  Currency
+                </label>
+                <Select
+                  selectedKeys={[currency]}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full"
+                >
+                  <SelectItem key="USD" value="USD">USD ($)</SelectItem>
+                  <SelectItem key="EUR" value="EUR">EUR (€)</SelectItem>
+                  <SelectItem key="GBP" value="GBP">GBP (£)</SelectItem>
+                  <SelectItem key="CAD" value="CAD">CAD ($)</SelectItem>
+                  <SelectItem key="AUD" value="AUD">AUD ($)</SelectItem>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground-700 mb-2">
+                  Language
+                </label>
+                <Select
+                  selectedKeys={[language]}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full"
+                >
+                  <SelectItem key="en-US" value="en-US">English (US)</SelectItem>
+                  <SelectItem key="es-ES" value="es-ES">Spanish</SelectItem>
+                  <SelectItem key="fr-FR" value="fr-FR">French</SelectItem>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground-700 mb-2">
+                  Tax Region (State/Country)
+                </label>
+                <Select
+                  selectedKeys={[taxRegion]}
+                  onChange={(e) => setTaxRegion(e.target.value)}
+                  className="w-full"
+                  description="AI uses this to identify specific tax rules."
+                >
+                  <SelectItem key="US-CA" value="US-CA">United States - California</SelectItem>
+                  <SelectItem key="US-TX" value="US-TX">United States - Texas</SelectItem>
+                  <SelectItem key="US-NY" value="US-NY">United States - New York</SelectItem>
+                  <SelectItem key="CA-ON" value="CA-ON">Canada - Ontario</SelectItem>
+                  <SelectItem key="UK" value="UK">United Kingdom</SelectItem>
+                </Select>
               </div>
             </div>
           </div>

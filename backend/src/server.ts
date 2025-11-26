@@ -58,20 +58,23 @@ app.post('/api/process-document', async (req, res) => {
         // 1. Analyze with Azure
         const analysis = await analyzeDocument(fileUrl);
 
-        // 2. Update Supabase
-        const { error } = await (getSupabase()
+        // 3. Update Supabase with extracted data AND Smart Title
+        const smartTitle = `${analysis.vendor} - ${analysis.date}`;
+
+        const { error: dbError } = await (getSupabase()
             .from('documents') as any)
             .update({
-                vendor: analysis.vendor,
+                status: 'needs_review', // Ready for Immediate Review
                 amount: analysis.amount,
                 date: analysis.date,
-                status: 'needs_review', // Update status to indicate processing is done
-                // Store line items if you have a separate table, otherwise store in a JSON column
-                // line_items: analysis.items 
+                vendor: analysis.vendor,
+                name: smartTitle, // Smart Title Update
+                confidence: analysis.confidence,
+                category: 'Invoice' // Default, can be improved with classification
             })
             .eq('id', documentId);
 
-        if (error) throw error;
+        if (dbError) throw dbError;
 
         res.json({ success: true, data: analysis });
 
@@ -159,7 +162,27 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
     res.json({ received: true });
 });
 
+// Email Endpoints
+import { sendVendorEmail, sendWeeklyTaxSummary } from './services/email-service';
+
+app.post('/api/email/vendor', async (req, res) => {
+    const { to, vendorName, message } = req.body;
+    if (!to || !vendorName || !message) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const success = await sendVendorEmail(to, vendorName, message);
+    if (success) return res.json({ success: true });
+    return res.status(500).json({ error: 'Failed to send email' });
+});
+
+app.post('/api/email/weekly-summary', async (req, res) => {
+    const { to, savings, docCount } = req.body;
+    const success = await sendWeeklyTaxSummary(to, savings, docCount);
+    if (success) return res.json({ success: true });
+    return res.status(500).json({ error: 'Failed to send email' });
+});
+
 // Start Server
 app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(`Backend running on port ${port}`);
 });

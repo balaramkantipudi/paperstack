@@ -11,7 +11,39 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: 
   const [page, setPage] = React.useState(1);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isEmailOpen, onOpen: onEmailOpen, onOpenChange: onEmailOpenChange } = useDisclosure();
   const rowsPerPage = 10;
+
+  const [emailData, setEmailData] = React.useState({ to: "", vendorName: "", message: "" });
+  const [isSendingEmail, setIsSendingEmail] = React.useState(false);
+
+  const handleOpenEmail = (vendor: any) => {
+    setEmailData({
+      to: vendor.email || "vendor@example.com",
+      vendorName: vendor.name,
+      message: ""
+    });
+    onEmailOpen();
+  };
+
+  const handleSendEmail = async () => {
+    setIsSendingEmail(true);
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      await fetch(`${backendUrl}/api/email/vendor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailData)
+      });
+      alert("Email sent successfully!");
+      onEmailOpenChange(); // Close modal
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      alert("Failed to send email.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   const [vendors, setVendors] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -30,6 +62,15 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: 
     };
 
     loadVendorStats();
+
+    // Subscribe to Realtime Updates
+    const subscription = documentService.subscribeToDocuments(() => {
+      loadVendorStats();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const [newVendor, setNewVendor] = React.useState({
@@ -147,10 +188,14 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: 
               color="default"
               startContent={<Icon icon="lucide:mail" className="h-4 w-4" />}
               onPress={() => {
-                alert('Email functionality coming soon!');
+                if (vendors.length > 0) {
+                  handleOpenEmail(vendors[0]); // Demo: Email first vendor
+                } else {
+                  alert("No vendors to email.");
+                }
               }}
             >
-              Email All Vendors
+              Email Vendor (Demo)
             </Button>
           </div>
         </div>
@@ -339,6 +384,46 @@ export const VendorManagementPage: React.FC<{ navigateTo: (view: string, data?: 
                   onClose();
                 }}>
                   Add Vendor
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Email Vendor Modal */}
+      <Modal isOpen={isEmailOpen} onOpenChange={onEmailOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Email Vendor</ModalHeader>
+              <ModalBody>
+                <Input
+                  label="To"
+                  value={emailData.to}
+                  isReadOnly
+                  variant="bordered"
+                />
+                <Input
+                  label="Vendor Name"
+                  value={emailData.vendorName}
+                  isReadOnly
+                  variant="bordered"
+                />
+                <Input
+                  label="Message"
+                  placeholder="Enter your message..."
+                  variant="bordered"
+                  value={emailData.message}
+                  onValueChange={(val) => setEmailData({ ...emailData, message: val })}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Cancel
+                </Button>
+                <Button color="primary" onPress={handleSendEmail} isLoading={isSendingEmail}>
+                  Send Email
                 </Button>
               </ModalFooter>
             </>

@@ -27,6 +27,15 @@ export const ProjectsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
         };
 
         loadProjects();
+
+        // Subscribe to Realtime Updates
+        const subscription = documentService.subscribeToDocuments(() => {
+            loadProjects();
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     const [newProject, setNewProject] = React.useState({

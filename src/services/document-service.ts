@@ -370,6 +370,56 @@ class DocumentService {
             fileUrl: docData.file_url
         };
     }
+    async updateDocument(id: string, updates: Partial<Document>): Promise<Document | null> {
+        // Convert Document interface back to DB schema if needed (e.g. vendor name to vendor_id)
+        // For now, assuming we update the flat fields or handle relations separately.
+        // Simplified update for this phase:
+        const { data, error } = await this.client
+            .from('documents')
+            .update({
+                name: updates.name,
+                type: updates.type,
+                status: updates.status,
+                amount: updates.amount,
+                date: updates.date,
+                // Note: Updating vendor/project by name requires looking up IDs, skipping for MVP speed
+                // In a real app, we'd have a dropdown for vendor ID.
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error updating document:", error);
+            return null;
+        }
+
+        return {
+            id: data.id,
+            name: data.name,
+            type: data.type,
+            status: data.status,
+            amount: data.amount,
+            date: data.date,
+            vendor: updates.vendor || 'Unknown', // Keep existing for UI
+            project: updates.project || 'Unknown',
+            fileUrl: data.file_url
+        };
+    }
+
+    subscribeToDocuments(callback: (payload: any) => void) {
+        return this.client
+            .channel('documents-channel')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'documents' },
+                (payload) => {
+                    console.log('Realtime update received:', payload);
+                    callback(payload);
+                }
+            )
+            .subscribe();
+    }
 }
 
 export const documentService = new DocumentService();

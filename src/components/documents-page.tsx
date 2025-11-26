@@ -36,6 +36,16 @@ export const DocumentsPage: React.FC<{ navigateTo: (view: string, data?: any) =>
             }
         };
         loadData();
+
+        // Subscribe to Realtime Updates
+        const subscription = documentService.subscribeToDocuments(() => {
+            // Refresh data on any change
+            loadData();
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     const filteredDocuments = documents

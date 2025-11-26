@@ -1,18 +1,25 @@
 import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
 
-const endpoint = process.env.AZURE_DOCUMENT_ENDPOINT || "";
-const key = process.env.AZURE_DOCUMENT_KEY || "";
+let client: DocumentAnalysisClient | null = null;
 
-if (!endpoint || !key) {
-    console.warn("Azure Document Intelligence credentials missing");
+function getClient(): DocumentAnalysisClient {
+    if (client) return client;
+
+    const endpoint = process.env.AZURE_DOCUMENT_ENDPOINT;
+    const key = process.env.AZURE_DOCUMENT_KEY;
+
+    if (!endpoint || !key) {
+        throw new Error("Azure Document Intelligence credentials missing. Please check AZURE_DOCUMENT_ENDPOINT and AZURE_DOCUMENT_KEY environment variables.");
+    }
+
+    client = new DocumentAnalysisClient(endpoint, new AzureKeyCredential(key));
+    return client;
 }
-
-const client = new DocumentAnalysisClient(endpoint, new AzureKeyCredential(key));
 
 export async function analyzeDocument(fileUrl: string) {
     try {
         console.log(`Analyzing document from URL: ${fileUrl}`);
-        const poller = await client.beginAnalyzeDocumentFromUrl("prebuilt-invoice", fileUrl);
+        const poller = await getClient().beginAnalyzeDocumentFromUrl("prebuilt-invoice", fileUrl);
         const { documents } = await poller.pollUntilDone();
 
         if (!documents || documents.length === 0) {
@@ -32,7 +39,8 @@ export async function analyzeDocument(fileUrl: string) {
                 quantity: (item.properties.Quantity as any)?.value || 1,
                 unitPrice: (item.properties.UnitPrice as any)?.value || 0,
                 amount: (item.properties.Amount as any)?.value || 0
-            }))
+            })),
+            confidence: doc.confidence || 0.8 // Default confidence if missing
         };
     } catch (error) {
         console.error("Azure Analysis Error:", error);

@@ -51,6 +51,16 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
     };
 
     loadDashboardData();
+
+    // Subscribe to Realtime Updates
+    const subscription = documentService.subscribeToDocuments(() => {
+      // Refresh data on any change
+      loadDashboardData();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const projects = [
@@ -178,9 +188,6 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                 <DropdownItem key="profile" startContent={<Icon icon="lucide:user" />} onClick={() => navigateTo("settings")}>
                   Profile & Settings
                 </DropdownItem>
-                <DropdownItem key="seed" startContent={<Icon icon="lucide:database" />} onClick={handleSeedData} className="text-warning">
-                  Seed Sample Data
-                </DropdownItem>
                 <DropdownItem key="logout" className="text-danger" color="danger" startContent={<Icon icon="lucide:log-out" />} onPress={() => clerk.signOut()}>
                   Log Out
                 </DropdownItem>
@@ -188,12 +195,12 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
             </Dropdown>
           </div>
         </div>
-      </header>
+      </header >
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 md:px-6 py-8">
+      < main className="container mx-auto px-4 md:px-6 py-8" >
         {/* Dashboard Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        < div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4" >
           <div>
             <h1 className="font-gilroy text-2xl md:text-3xl font-bold mb-1">Dashboard</h1>
             <p className="text-foreground-500">Welcome back, {user?.firstName || 'User'}. Here's what's happening today.</p>
@@ -201,43 +208,51 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
 
           <div className="flex items-center gap-4">
           </div>
-        </div>
+        </div >
 
         {/* Project Filter */}
-        <div className="flex justify-end mb-8">
-        </div>
+        < div className="flex justify-end mb-8" >
+        </div >
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {metrics.map((metric, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-            >
-              <Card className="ambient-shadow">
-                <CardBody className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-foreground-500 mb-1">{metric.title}</p>
-                      <h3 className="font-gilroy text-2xl font-bold">{metric.value}</h3>
-                      <p className={`text - xs mt - 1 ${metric.change.includes('+') ? 'text-success-500' : 'text-danger-500'} `}>
-                        {metric.change} from last month
-                      </p>
+        < div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" >
+          {
+            metrics.map((metric, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                onClick={() => {
+                  if (metric.title === "Awaiting Review") {
+                    navigateTo("documents", { status: 'needs_review' });
+                  }
+                }}
+                className={metric.title === "Awaiting Review" ? "cursor-pointer" : ""}
+              >
+                <Card className="ambient-shadow">
+                  <CardBody className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm text-foreground-500 mb-1">{metric.title}</p>
+                        <h3 className="font-gilroy text-2xl font-bold">{metric.value}</h3>
+                        <p className={`text - xs mt - 1 ${metric.change.includes('+') ? 'text-success-500' : 'text-danger-500'} `}>
+                          {metric.change} from last month
+                        </p>
+                      </div>
+                      <div className={`h - 10 w - 10 rounded - full bg - ${metric.color} -50 flex items - center justify - center`}>
+                        <Icon icon={metric.icon} className={`h - 5 w - 5 text - ${metric.color} -500`} />
+                      </div>
                     </div>
-                    <div className={`h - 10 w - 10 rounded - full bg - ${metric.color} -50 flex items - center justify - center`}>
-                      <Icon icon={metric.icon} className={`h - 5 w - 5 text - ${metric.color} -500`} />
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+                  </CardBody>
+                </Card>
+              </motion.div>
+            ))
+          }
+        </div >
 
         {/* Quick Actions Bar */}
-        <div className="mb-8">
+        < div className="mb-8" >
           <Card className="ambient-shadow">
             <CardBody className="p-4">
               <div className="flex flex-wrap gap-4 items-center justify-between">
@@ -288,12 +303,12 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
               </div>
             </CardBody>
           </Card>
-        </div>
+        </div >
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        < div className="grid grid-cols-1 lg:grid-cols-3 gap-8" >
           {/* Recent Activity */}
-          <div className="lg:col-span-2">
+          < div className="lg:col-span-2" >
             <Card className="ambient-shadow">
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -358,12 +373,12 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                 </div>
               </CardBody>
             </Card>
-          </div>
+          </div >
 
           {/* Right Sidebar */}
-          <div className="space-y-8">
+          < div className="space-y-8" >
             {/* Top Vendors */}
-            <Card className="ambient-shadow">
+            < Card className="ambient-shadow" >
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-gilroy text-lg font-bold">Top Vendors</h2>
@@ -400,10 +415,10 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                   ))}
                 </div>
               </CardBody>
-            </Card>
+            </Card >
 
             {/* Document Categories */}
-            <Card className="ambient-shadow">
+            < Card className="ambient-shadow" >
               <CardBody className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-gilroy text-lg font-bold">Document Categories</h2>
@@ -437,11 +452,11 @@ export const DashboardPage: React.FC<{ navigateTo: (view: string, data?: any) =>
                   ))}
                 </div>
               </CardBody>
-            </Card>
+            </Card >
 
-          </div>
-        </div>
-      </main>
-    </div>
+          </div >
+        </div >
+      </main >
+    </div >
   );
 };

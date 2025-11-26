@@ -8,6 +8,7 @@ import { Icon } from "@iconify/react";
 
 import { documentService } from "../services/document-service";
 import { useAuth } from "@clerk/clerk-react";
+import { DocumentReviewModal } from "./document-review-modal";
 
 export const DocumentUploadPage: React.FC<{ navigateTo: (view: string) => void }> = ({ navigateTo }) => {
   const { userId } = useAuth();
@@ -133,20 +134,28 @@ export const DocumentUploadPage: React.FC<{ navigateTo: (view: string) => void }
     }
   };
 
-  const simulateProcessing = (filename: string) => {
-    let step = 0;
-    const interval = setInterval(() => {
-      setProcessingStep(step);
-      step++;
+  const [reviewDoc, setReviewDoc] = React.useState<any | null>(null);
+  const [isReviewOpen, setIsReviewOpen] = React.useState(false);
 
-      if (step > processingSteps.length) {
-        clearInterval(interval);
-        // Navigate to processing view
-        // Pass the filename via localStorage since we can't pass props easily with this simple router
-        localStorage.setItem('processing_document', filename);
-        setTimeout(() => navigateTo("document-processing"), 500);
+  // Listen for Realtime Updates to trigger Review Modal
+  React.useEffect(() => {
+    const subscription = documentService.subscribeToDocuments((payload) => {
+      if (payload.eventType === 'UPDATE' && payload.new.status === 'needs_review') {
+        // Check if this is the document we just uploaded (simplified check)
+        // In a real app, we'd match IDs. For now, we just open the modal for the latest one.
+        setReviewDoc(payload.new);
+        setIsReviewOpen(true);
+        setIsUploading(false); // Stop the spinner
       }
-    }, 1500);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const simulateProcessing = (filename: string) => {
+    // Legacy simulation - now handled by Realtime
   };
 
   const cancelUpload = () => {
@@ -553,6 +562,16 @@ export const DocumentUploadPage: React.FC<{ navigateTo: (view: string) => void }
           )}
         </ModalContent>
       </Modal>
+
+      <DocumentReviewModal
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        document={reviewDoc}
+        onSave={(updatedDoc) => {
+          console.log("Document approved:", updatedDoc);
+          navigateTo("documents");
+        }}
+      />
     </div>
   );
 };
