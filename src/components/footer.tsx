@@ -8,15 +8,14 @@ export const Footer: React.FC<{ navigateTo?: (view: string) => void }> = ({ navi
     {
       title: "Product",
       links: [
-        { name: "Features", action: () => navigateTo?.("landing") },
-        { name: "Pricing", action: () => navigateTo?.("landing") }
+        { name: "Features", action: () => { navigateTo?.("landing"); setTimeout(() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }), 100); } },
+        { name: "Pricing", action: () => { navigateTo?.("landing"); setTimeout(() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }), 100); } }
       ]
     },
     {
       title: "Company",
       links: [
         { name: "About", action: () => navigateTo?.("about") },
-        { name: "Careers - Marketing Agent (Open)", action: () => window.open('mailto:careers@thepaperstack.io?subject=Marketing Agent Application', '_blank') },
         { name: "Contact", action: () => navigateTo?.("contact") }
       ]
     },
