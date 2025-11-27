@@ -87,22 +87,27 @@ app.post('/api/process-document', async (req, res) => {
 // Stripe Checkout Endpoint
 app.post('/api/create-checkout-session', async (req, res) => {
     try {
-        const { planName, successUrl, cancelUrl, userId } = req.body;
+        const { planName, billingCycle, successUrl, cancelUrl, userId } = req.body;
 
-        if (!planName || !successUrl || !cancelUrl || !userId) {
+        if (!planName || !billingCycle || !successUrl || !cancelUrl || !userId) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        // Map plan names to Stripe Price IDs (you'll need to create these in Stripe Dashboard)
-        const priceIds: { [key: string]: string } = {
-            'Starter': process.env.STRIPE_PRICE_ID_STARTER || 'price_starter',
-            'Professional': process.env.STRIPE_PRICE_ID_PRO || 'price_pro',
-            // Enterprise uses custom pricing, handled separately
+        // Map plan names + billing cycle to Stripe Price IDs
+        const priceIds: { [key: string]: { [cycle: string]: string } } = {
+            'Starter': {
+                'monthly': process.env.STRIPE_PRICE_STARTER_MONTHLY || 'price_1SY35UBuBqG91d3XC2ZDAywM',
+                'yearly': process.env.STRIPE_PRICE_STARTER_YEARLY || 'price_1SY3vRBuBqG91d3XsnY9TqX6'
+            },
+            'Professional': {
+                'monthly': process.env.STRIPE_PRICE_PRO_MONTHLY || 'price_1SY35nBuBqG91d3XuYNbS4ln',
+                'yearly': process.env.STRIPE_PRICE_PRO_YEARLY || 'price_1SY3v5BuBqG91d3XN89pHQUt'
+            }
         };
 
-        const priceId = priceIds[planName];
+        const priceId = priceIds[planName]?.[billingCycle];
         if (!priceId) {
-            return res.status(400).json({ error: 'Invalid plan name' });
+            return res.status(400).json({ error: 'Invalid plan or billing cycle' });
         }
 
         const session = await getStripe().checkout.sessions.create({
@@ -112,7 +117,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
             success_url: successUrl,
             cancel_url: cancelUrl,
             client_reference_id: userId,
-            metadata: { planName } // Pass plan name for webhook
+            metadata: { planName, billingCycle }
         });
 
         res.json({ sessionId: session.id, url: session.url });

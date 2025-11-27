@@ -850,6 +850,7 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
         body: JSON.stringify({
           userId,
           planName,
+          billingCycle, // Pass selected billing cycle
           successUrl: `${window.location.origin}/dashboard?upgrade=success`,
           cancelUrl: `${window.location.origin}/settings?tab=billing`
         })
