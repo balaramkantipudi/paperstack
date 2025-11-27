@@ -98,6 +98,31 @@ export const DocumentUploadPage: React.FC<{ navigateTo: (view: string) => void }
     setProcessingStep(0);
 
     try {
+      // Check document limit based on plan
+      const stats = await documentService.getStats();
+      const currentMonthDocs = stats.totalProcessed; // This should ideally be filtered by current month
+
+      // Fetch user's plan from Supabase subscriptions table
+      const { data: subscription } = await (await import('../lib/supabase')).supabase
+        .from('subscriptions')
+        .select('plan_name, status')
+        .eq('clerk_user_id', userId)
+        .single();
+
+      let documentLimit = 100; // Default to Starter plan limit
+      if (subscription?.plan_name === 'Professional') {
+        documentLimit = 500;
+      } else if (subscription?.plan_name === 'Enterprise') {
+        documentLimit = Infinity; // Unlimited
+      }
+
+      // Check if user has reached their limit
+      if (currentMonthDocs >= documentLimit) {
+        alert(`You've reached your plan's limit of ${documentLimit} documents per month. Please upgrade to process more documents.`);
+        setIsUploading(false);
+        return;
+      }
+
       let uploadedDocName: string | null = null; // To store the name of the last uploaded doc for navigation
 
       for (let i = 0; i < files.length; i++) {

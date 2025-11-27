@@ -833,12 +833,38 @@ export const SettingsPage: React.FC<{ navigateTo: (view: string) => void }> = ({
     </motion.div>
   );
 
-  const handleUpgrade = (planName: string) => {
-    // Mock Stripe checkout
-    const confirm = window.confirm(`Proceed to mock checkout for ${planName} plan?`);
-    if (confirm) {
-      alert("Payment successful! Your plan has been upgraded.");
-      setCurrentPlan(planName);
+  const handleUpgrade = async (planName: string) => {
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      const userId = clerk.user?.id;
+
+      if (!userId) {
+        alert("Please log in to upgrade your plan.");
+        return;
+      }
+
+      // Trigger Stripe checkout
+      const response = await fetch(`${backendUrl}/api/create-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          planName,
+          successUrl: `${window.location.origin}/dashboard?upgrade=success`,
+          cancelUrl: `${window.location.origin}/settings?tab=billing`
+        })
+      });
+
+      const { url } = await response.json();
+
+      if (url) {
+        window.location.href = url;
+      } else {
+        alert("Failed to create checkout session. Please try again.");
+      }
+    } catch (error) {
+      console.error("Upgrade error:", error);
+      alert("An error occurred. Please try again later.");
     }
   };
 
