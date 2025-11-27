@@ -15,12 +15,13 @@ export const PricingSection: React.FC<{ navigateTo?: (view: string) => void }> =
     {
       name: "Starter",
       price: "$49",
-      description: "Perfect for small teams and simple projects",
+      description: "Perfect for solo contractors and small businesses",
       features: [
         "Process up to 100 documents/month",
-        "Basic data extraction",
-        "Email support",
-        "1 user license"
+        "AI-powered data extraction",
+        "Smart document titles (Vendor - Date)",
+        "Project budget tracking",
+        "Email support"
       ],
       isPopular: false,
       color: "default"
@@ -28,13 +29,13 @@ export const PricingSection: React.FC<{ navigateTo?: (view: string) => void }> =
     {
       name: "Professional",
       price: "$149",
-      description: "For growing teams with advanced needs",
+      description: "For growing businesses with higher volume",
       features: [
         "Process up to 500 documents/month",
-        "Advanced data extraction & insights",
-        "Priority support",
-        "5 user licenses",
-        "API access"
+        "Everything in Starter",
+        "Weekly tax summary emails",
+        "Priority email support",
+        "Advanced reporting dashboard"
       ],
       isPopular: true,
       color: "primary"
@@ -42,13 +43,13 @@ export const PricingSection: React.FC<{ navigateTo?: (view: string) => void }> =
     {
       name: "Enterprise",
       price: "Custom",
-      description: "For large organizations with complex requirements",
+      description: "For large organizations with custom needs",
       features: [
         "Unlimited document processing",
-        "Custom AI model training",
+        "Everything in Professional",
+        "Custom integrations (QuickBooks, Xero)",
         "Dedicated account manager",
-        "Unlimited users",
-        "Advanced security features"
+        "SLA & priority support"
       ],
       isPopular: false,
       color: "default"
