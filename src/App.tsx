@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@heroui/react";
 import { Header } from "./components/header";
 import { HeroSection } from "./components/hero-section";
-import { SocialProofBar } from "./components/social-proof-bar";
+import { TrustBadges } from "./components/trust-badges";
 import { FeaturesSection } from "./components/features-section";
 import { ProductShowcase } from "./components/product-showcase";
 import { HowItWorks } from "./components/how-it-works";
@@ -133,7 +133,7 @@ function App() {
           <Header navigateTo={navigateTo} />
           <main className="space-y-0">
             <HeroSection navigateTo={navigateTo} />
-            <SocialProofBar />
+            <TrustBadges />
             <FeaturesSection />
             <ProductShowcase />
             <HowItWorks />
