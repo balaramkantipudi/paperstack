@@ -9,15 +9,15 @@ export const ProductShowcase: React.FC = () => {
     triggerOnce: true,
     threshold: 0.1,
   });
-  
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  
+
   const highlightPoints = [
     { icon: "lucide:search", text: "Intelligent document search" },
     { icon: "lucide:bar-chart", text: "Real-time analytics" },
     { icon: "lucide:file-text", text: "Automated document processing" },
   ];
-  
+
   return (
     <section className="py-28 md:py-36 bg-background-50">
       <div className="container mx-auto px-6 md:px-8">
@@ -35,10 +35,10 @@ export const ProductShowcase: React.FC = () => {
               <p className="text-foreground-500 text-lg mb-10">
                 Our intuitive dashboard puts everything you need at your fingertips. Process documents, track progress, and gain insights—all in one place.
               </p>
-              
+
               <div className="space-y-5">
                 {highlightPoints.map((point, index) => (
-                  <motion.div 
+                  <motion.div
                     key={index}
                     initial={{ opacity: 0, x: -10 }}
                     animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
@@ -52,25 +52,9 @@ export const ProductShowcase: React.FC = () => {
                   </motion.div>
                 ))}
               </div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                transition={{ duration: 0.4, delay: 0.6 }}
-                className="mt-10"
-              >
-                <Button
-                  color="primary"
-                  variant="flat"
-                  startContent={<Icon icon="lucide:play" className="h-4 w-4" />}
-                  onPress={onOpen}
-                >
-                  Watch product demo
-                </Button>
-              </motion.div>
             </motion.div>
           </div>
-          
+
           <div className="w-full lg:w-1/2 order-1 lg:order-2">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -88,7 +72,7 @@ export const ProductShowcase: React.FC = () => {
                   <span>Dashboard</span>
                 </div>
               </div>
-              
+
               <div className="bg-white p-6">
                 {/* Dashboard Header with User */}
                 <div className="flex justify-between items-center mb-6">
@@ -103,7 +87,7 @@ export const ProductShowcase: React.FC = () => {
                     <div className="h-8 w-8 rounded-full bg-foreground-200"></div>
                   </div>
                 </div>
-                
+
                 {/* Stats Cards */}
                 <div className="grid grid-cols-3 gap-6 mb-6">
                   <div className="bg-foreground-50 p-4 rounded">
@@ -140,7 +124,7 @@ export const ProductShowcase: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Recent Document */}
                 <div className="bg-white border border-foreground-200 rounded p-5 mb-6">
                   <div className="flex justify-between items-center mb-4">
@@ -150,7 +134,7 @@ export const ProductShowcase: React.FC = () => {
                     </div>
                     <div className="text-xs text-primary-500">View All</div>
                   </div>
-                  
+
                   <div className="border border-foreground-100 rounded p-3 mb-3">
                     <div className="flex justify-between mb-2">
                       <div className="font-medium">Invoice #2458</div>
@@ -162,7 +146,7 @@ export const ProductShowcase: React.FC = () => {
                       <div className="text-primary-500">View Details</div>
                     </div>
                   </div>
-                  
+
                   <div className="border border-foreground-100 rounded p-3">
                     <div className="flex justify-between mb-2">
                       <div className="font-medium">Permit Application</div>
@@ -175,7 +159,7 @@ export const ProductShowcase: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Charts */}
                 <div className="grid grid-cols-2 gap-6">
                   <div className="bg-foreground-50 p-4 rounded h-40">
@@ -203,60 +187,18 @@ export const ProductShowcase: React.FC = () => {
                     <div className="h-24 w-full bg-white rounded border border-foreground-200 flex items-center justify-center">
                       <div className="relative h-16 w-16">
                         <div className="absolute inset-0 rounded-full border-4 border-primary-500 border-t-secondary-500 border-r-secondary-500"></div>
-                        <div className="absolute inset-0 rounded-full border-4 border-transparent border-b-warning-500 border-l-warning-500" style={{transform: "rotate(45deg)"}}></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-transparent border-b-warning-500 border-l-warning-500" style={{ transform: "rotate(45deg)" }}></div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              <motion.div
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary-500 text-white rounded-full h-16 w-16 flex items-center justify-center ambient-shadow cursor-pointer"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onOpen}
-              >
-                <Icon icon="lucide:play" className="h-6 w-6" />
-              </motion.div>
             </motion.div>
           </div>
         </div>
       </div>
-      
-      {/* Video Demo Modal */}
-      <Modal 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange}
-        size="4xl"
-        hideCloseButton
-      >
-        <ModalContent>
-          {(onClose) => (
-            <ModalBody className="p-0 overflow-hidden">
-              <div className="relative aspect-video bg-foreground-900 w-full">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <Icon icon="lucide:loader-2" className="h-10 w-10 mx-auto animate-spin mb-4" />
-                    <p>Loading product demo...</p>
-                  </div>
-                </div>
-                <Button
-                  isIconOnly
-                  variant="flat"
-                  color="default"
-                  className="absolute top-4 right-4 bg-foreground-800/50 text-white"
-                  onPress={onClose}
-                >
-                  <Icon icon="lucide:x" className="h-5 w-5" />
-                </Button>
-              </div>
-            </ModalBody>
-          )}
-        </ModalContent>
-      </Modal>
+
+      {/* Removed Video Demo Modal - no demo video yet */}
     </section>
   );
 };

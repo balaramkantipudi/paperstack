@@ -9,29 +9,14 @@ export const Footer: React.FC<{ navigateTo?: (view: string) => void }> = ({ navi
       title: "Product",
       links: [
         { name: "Features", action: () => navigateTo?.("landing") },
-        { name: "Pricing", action: () => navigateTo?.("landing") },
-        { name: "Integrations", action: () => navigateTo?.("landing") },
-        { name: "Roadmap", action: () => { } },
-        { name: "Changelog", action: () => { } }
-      ]
-    },
-    {
-      title: "Resources",
-      links: [
-        { name: "Documentation", action: () => { } },
-        { name: "Guides", action: () => { } },
-        { name: "API Reference", action: () => { } },
-        { name: "Community", action: () => { } },
-        { name: "Support", action: () => { } }
+        { name: "Pricing", action: () => navigateTo?.("landing") }
       ]
     },
     {
       title: "Company",
       links: [
         { name: "About", action: () => navigateTo?.("about") },
-        { name: "Careers", action: () => { } },
-        { name: "Blog", action: () => { } },
-        { name: "Press", action: () => { } },
+        { name: "Careers - Marketing Agent (Open)", action: () => window.open('mailto:careers@thepaperstack.io?subject=Marketing Agent Application', '_blank') },
         { name: "Contact", action: () => navigateTo?.("contact") }
       ]
     },
@@ -39,10 +24,7 @@ export const Footer: React.FC<{ navigateTo?: (view: string) => void }> = ({ navi
       title: "Legal",
       links: [
         { name: "Privacy", action: () => navigateTo?.("privacy") },
-        { name: "Terms", action: () => navigateTo?.("terms") },
-        { name: "Security", action: () => { } },
-        { name: "Compliance", action: () => { } },
-        { name: "GDPR", action: () => { } }
+        { name: "Terms", action: () => navigateTo?.("terms") }
       ]
     }
   ];
