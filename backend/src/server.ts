@@ -87,25 +87,34 @@ app.post('/api/process-document', async (req, res) => {
 // Stripe Checkout Endpoint
 app.post('/api/create-checkout-session', async (req, res) => {
     try {
-        const { priceId, successUrl, cancelUrl, userId } = req.body; // Expect userId
+        const { planName, successUrl, cancelUrl, userId } = req.body;
 
-        if (!priceId || !successUrl || !cancelUrl) {
+        if (!planName || !successUrl || !cancelUrl || !userId) {
             return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Map plan names to Stripe Price IDs (you'll need to create these in Stripe Dashboard)
+        const priceIds: { [key: string]: string } = {
+            'Starter': process.env.STRIPE_PRICE_ID_STARTER || 'price_starter',
+            'Professional': process.env.STRIPE_PRICE_ID_PRO || 'price_pro',
+            // Enterprise uses custom pricing, handled separately
+        };
+
+        const priceId = priceIds[planName];
+        if (!priceId) {
+            return res.status(400).json({ error: 'Invalid plan name' });
         }
 
         const session = await getStripe().checkout.sessions.create({
             payment_method_types: ['card'],
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
-            ],
+            line_items: [{ price: priceId, quantity: 1 }],
             mode: 'subscription',
             success_url: successUrl,
             cancel_url: cancelUrl,
-            client_reference_id: userId, // Pass userId to webhook
+            client_reference_id: userId,
+            metadata: { planName } // Pass plan name for webhook
         });
+
         res.json({ sessionId: session.id, url: session.url });
 
     } catch (error: any) {
@@ -138,23 +147,26 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
         const userId = session.client_reference_id;
         const subscriptionId = session.subscription;
         const customerId = session.customer;
+        const planName = session.metadata?.planName || 'Starter'; // Get plan from metadata
 
         if (userId) {
-            console.log(`Processing subscription for user: ${userId}`);
+            console.log(`Processing subscription for user: ${userId}, plan: ${planName}`);
             // Update Supabase
             const { error } = await (getSupabase()
                 .from('subscriptions') as any)
                 .upsert({
-                    user_id: userId,
+                    clerk_user_id: userId,
                     stripe_customer_id: customerId,
                     stripe_subscription_id: subscriptionId,
                     status: 'active',
-                    plan_type: 'pro', // Assuming this is the pro plan
+                    plan_name: planName,
                     updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id' });
+                }, { onConflict: 'clerk_user_id' });
 
             if (error) {
                 console.error('Supabase Update Error:', error);
+            } else {
+                console.log(`✅ Subscription created: ${planName} for user ${userId}`);
             }
         }
     }
